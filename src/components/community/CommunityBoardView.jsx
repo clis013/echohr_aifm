@@ -56,6 +56,7 @@ export default function CommunityBoardView({
   });
   const [userReacted, setUserReacted] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [isPostComposerOpen, setIsPostComposerOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newTag, setNewTag] = useState('Workload & Role Clarity');
@@ -310,83 +311,109 @@ export default function CommunityBoardView({
           {/* TAB 1: COMMUNITY DISCUSSIONS */}
           {activeTab === 'discussions' && (
             <div className="flex flex-col gap-4">
-              {/* Facebook-style Inline Post Creation Box (No need for hero Add Discussion button) */}
-              <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 shadow-card hover:border-[#5455EE]/30 transition-all flex flex-col gap-3.5">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs border border-[#5455EE]/20 font-bold text-xs mt-0.5">
+              {/* Expandable Inline Post Creation Box */}
+              {!isPostComposerOpen ? (
+                <div
+                  onClick={() => setIsPostComposerOpen(true)}
+                  className="bg-white border border-[#EBECEF] hover:border-[#5455EE]/40 rounded-3xl p-4 sm:p-4.5 shadow-card transition-all cursor-pointer flex items-center gap-3.5 group"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs border border-[#5455EE]/20 font-bold text-xs group-hover:scale-105 transition-transform">
                     <User size={18} />
                   </div>
-                  <div className="flex-1 flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold text-slate-900">Maya Tan</span>
-                        <span className="text-[10px] font-bold text-[#5455EE] bg-[#EEF0FF] px-2.5 py-0.5 rounded-full border border-[#5455EE]/20 flex items-center gap-1">
-                          <Lock size={10} />
-                          <span>Anonymous Peer</span>
-                        </span>
+                  <div className="flex-1 py-2.5 px-4 rounded-2xl bg-[#F8F9FD] border border-slate-200/80 text-xs sm:text-sm text-slate-500 group-hover:text-slate-800 transition-colors">
+                    What's on your mind? Share your thoughts, suggestions, or team experiences...
+                  </div>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-[#EEF0FF] group-hover:bg-[#5455EE] text-[#5455EE] group-hover:text-white rounded-2xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5"
+                  >
+                    <Plus size={14} />
+                    <span>Share</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white border border-[#5455EE]/40 ring-2 ring-[#5455EE]/10 rounded-3xl p-5 shadow-card transition-all flex flex-col gap-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs border border-[#5455EE]/20 font-bold text-xs mt-0.5">
+                      <User size={18} />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-900">Maya Tan</span>
+                          <span className="text-[10px] font-bold text-[#5455EE] bg-[#EEF0FF] px-2.5 py-0.5 rounded-full border border-[#5455EE]/20 flex items-center gap-1">
+                            <Lock size={10} />
+                            <span>Anonymous Peer Post</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-slate-500">Topic:</span>
+                          <select
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            className="p-1.5 px-3 rounded-xl border border-[#EBECEF] bg-[#F8F9FD] text-xs font-semibold text-slate-700 outline-none focus:border-[#5455EE] cursor-pointer"
+                          >
+                            <option value="Workload & Role Clarity">Workload & Role Clarity</option>
+                            <option value="Manager Support & Guidance">Manager Support & Guidance</option>
+                            <option value="Recognition & Career Growth">Recognition & Career Growth</option>
+                            <option value="Collaboration & Change">Collaboration & Change</option>
+                          </select>
+                        </div>
                       </div>
 
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-slate-500">Topic:</span>
-                      <select
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        className="p-1.5 px-3 rounded-xl border border-[#EBECEF] bg-[#F8F9FD] text-xs font-bold text-slate-700 outline-none focus:border-[#5455EE] cursor-pointer"
-                      >
-                        <option value="Workload & Role Clarity">Workload & Role Clarity</option>
-                        <option value="Manager Support & Guidance">Manager Support & Guidance</option>
-                        <option value="Recognition & Career Growth">Recognition & Career Growth</option>
-                        <option value="Collaboration & Change">Collaboration & Change</option>
-                      </select>
-                    </div>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Post title (e.g. Tips for managing sprint handoffs)..."
+                        className="w-full p-2.5 px-3.5 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#5455EE] focus:bg-white transition-all"
+                      />
 
-                    <input
-                      type="text"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="Title"
-                      className="w-full p-2.5 px-3.5 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#5455EE] focus:bg-white transition-all"
-                    />
-
-                    <textarea
-                      rows={2}
-                      value={newContent}
-                      onChange={(e) => setNewContent(e.target.value)}
-                      placeholder="Share your thoughts..."
-                      className="w-full p-3 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#5455EE] focus:bg-white transition-all resize-none leading-relaxed"
-                    />
+                      <textarea
+                        rows={3}
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        placeholder="What's on your mind? Share your constructive ideas, team experiences, or ask peers for advice..."
+                        className="w-full p-3 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#5455EE] focus:bg-white transition-all resize-none leading-relaxed"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      🛡️ Protected: Shared as Anonymous Peer on the Community Board
+                    </span>
 
-
-                  <div className="flex items-center justify-end gap-2">
-                    {(newTitle || newContent) && (
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => {
+                          setIsPostComposerOpen(false);
                           setNewTitle('');
                           setNewContent('');
                         }}
-                        className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                        className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
                       >
-                        Clear
+                        Cancel
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleCreatePost}
-                      disabled={!newTitle.trim() || !newContent.trim()}
-                      className="px-4 py-2 bg-[#5455EE] hover:bg-[#4344dd] disabled:opacity-40 disabled:hover:bg-[#5455EE] text-white text-xs font-bold rounded-2xl transition-all shadow-md shadow-[#5455EE]/20 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Send size={13} />
-                      <span>Post</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          handleCreatePost(e);
+                          setIsPostComposerOpen(false);
+                        }}
+                        disabled={!newTitle.trim() || !newContent.trim()}
+                        className="px-4 py-2 bg-[#5455EE] hover:bg-[#4344dd] disabled:opacity-40 disabled:hover:bg-[#5455EE] text-white text-xs font-bold rounded-2xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Send size={13} />
+                        <span>Post Anonymously</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {filteredPosts.length === 0 && (
                 <div className="bg-white border border-[#EBECEF] rounded-3xl p-10 text-center flex flex-col items-center justify-center gap-3">

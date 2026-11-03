@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { CATEGORIES } from '../../data/mockData';
+import { useApp } from '../../context/AppContext';
 import {
   Download,
   Plus,
@@ -9,78 +10,14 @@ import {
   Filter,
   User,
   Lock,
+  ArrowRight,
+  Eye,
+  CheckCircle2,
+  Clock,
+  Building2,
+  Sparkles,
+  MessageSquare,
 } from 'lucide-react';
-
-const INITIAL_FEEDBACK_ITEMS = [
-  {
-    id: 'FDB-1042',
-    date: '19 October 2026',
-    department: 'Engineering · Platform Squad',
-    category: 'Process & Tooling',
-    categoryKey: 'con_01',
-    title: 'Standardizing sprint brief checklists and priority trade-offs',
-    snippet:
-      'Proposing a brief definition-of-done kickoff checklist for each sprint to prevent conflicting task handoffs and ambiguous deliverables.',
-    outcome: 'Clearer task ownership and less sprint disruption for newer hires.',
-    privacy: 'Anonymous Employee',
-    isAnonymous: true,
-    reviewStatus: 'Reviewed by HR',
-    status: 'In Review',
-    statusType: 'review',
-    upvotes: 18,
-  },
-  {
-    id: 'FDB-1038',
-    date: '18 October 2026',
-    department: 'Engineering · Core Backend',
-    category: 'Process & Tooling',
-    categoryKey: 'con_02',
-    title: 'Centralized architectural decision records (ADRs) to avoid contradictory review feedback',
-    snippet:
-      'Different tech leads provide conflicting architectural directions on PRs. A shared ADR template in Notion/GitHub would unify review expectations.',
-    outcome: 'Unified code review standards, less rework, and faster merge cycles.',
-    privacy: 'Anonymous Dev',
-    isAnonymous: true,
-    reviewStatus: 'Action Plan Linked',
-    status: 'AP-01 Linked',
-    statusType: 'linked',
-    upvotes: 24,
-  },
-  {
-    id: 'FDB-1025',
-    date: '15 October 2026',
-    department: 'Product & Design',
-    category: 'Onboarding & Mentorship',
-    categoryKey: 'con_03',
-    title: 'Dedicated onboarding buddy pairings during first 60 days',
-    snippet:
-      'New product specialists spend significant time hunting down previous client presentation decks and launch checklist templates without knowing who to ping.',
-    outcome: 'Smoother ramp-up, faster time-to-first-deliverable, and reduced hesitation asking questions.',
-    privacy: 'Named (Maya · Assoc. Specialist)',
-    isAnonymous: false,
-    reviewStatus: 'Reviewed by HR',
-    status: 'Planned for Q4',
-    statusType: 'planned',
-    upvotes: 12,
-  },
-  {
-    id: 'FDB-1019',
-    date: '12 October 2026',
-    department: 'Sales & Marketing',
-    category: 'Team Culture & Workflow',
-    categoryKey: 'con_04',
-    title: 'Async daily standups on Slack to preserve morning deep-work focus',
-    snippet:
-      'Our daily morning standup has expanded into a 35-minute verbal status readout. Moving standard updates to async Slack threads would preserve uninterrupted engineering & campaign focus.',
-    outcome: 'Regained 2.5 hours of weekly focused flow time across 8 reps.',
-    privacy: 'Anonymous Rep',
-    isAnonymous: true,
-    reviewStatus: 'Reviewed by HR',
-    status: 'Trial Active',
-    statusType: 'trial',
-    upvotes: 9,
-  },
-];
 
 export default function FeedbackReportsView({
   reports = [],
@@ -88,12 +25,15 @@ export default function FeedbackReportsView({
   onSchedulePulse,
   onExportCSV,
 }) {
+  const { feedbackList: globalFeedbackList, updateFeedback } = useApp();
   const [activeTab, setActiveTab] = useState('reports');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [feedbackList, setFeedbackList] = useState(INITIAL_FEEDBACK_ITEMS);
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedFeedbackModal, setSelectedFeedbackModal] = useState(null);
   const [feedbackEditStatus, setFeedbackEditStatus] = useState('Need Review');
+
+  const feedbackList = globalFeedbackList || [];
 
   const getStatusBadge = (statusType, text) => {
     if (
@@ -138,6 +78,7 @@ export default function FeedbackReportsView({
         const matchSearch =
           !query ||
           (r.id && r.id.toLowerCase().includes(query)) ||
+          (r.referenceCode && r.referenceCode.toLowerCase().includes(query)) ||
           (r.concernTitle && r.concernTitle.toLowerCase().includes(query)) ||
           (r.snippet && r.snippet.toLowerCase().includes(query)) ||
           (r.department && r.department.toLowerCase().includes(query));
@@ -145,9 +86,15 @@ export default function FeedbackReportsView({
         const matchCat =
           selectedCategory === 'all' || r.concernCategory === selectedCategory;
 
-        return matchSearch && matchCat;
+        const matchStatus =
+          selectedStatus === 'all' ||
+          (selectedStatus === 'urgent' && (r.priority === 'High' || r.status === 'Action Required')) ||
+          (selectedStatus === 'in_progress' && r.status === 'In Progress') ||
+          (selectedStatus === 'resolved' && (r.status === 'Resolved' || r.resolutionStatus === 'Resolved'));
+
+        return matchSearch && matchCat && matchStatus;
       });
-  }, [reports, searchQuery, selectedCategory]);
+  }, [reports, searchQuery, selectedCategory, selectedStatus]);
 
   const filteredFeedback = useMemo(() => {
     return feedbackList.filter((f) => {
@@ -161,34 +108,41 @@ export default function FeedbackReportsView({
       const matchCat =
         selectedCategory === 'all' || f.categoryKey === selectedCategory;
 
-      return matchSearch && matchCat;
+      const matchStatus =
+        selectedStatus === 'all' ||
+        (selectedStatus === 'urgent' && f.status === 'Need Review') ||
+        (selectedStatus === 'in_progress' && (f.status === 'In Progress' || f.status === 'In Review')) ||
+        (selectedStatus === 'resolved' && (f.status === 'Resolved' || f.status === 'Planned for Q4'));
+
+      return matchSearch && matchCat && matchStatus;
     });
-  }, [feedbackList, searchQuery, selectedCategory]);
+  }, [feedbackList, searchQuery, selectedCategory, selectedStatus]);
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* 1. TOP TABS BAR */}
+      {/* 1. TOP TABS & ACTIONS BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EBECEF] pb-4">
-        <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Segmented Tab Pill Header */}
+        <div className="flex items-center gap-2 p-1.5 bg-[#F1F3F9] rounded-2xl border border-slate-200/60 shadow-inner">
           <button
             type="button"
             onClick={() => {
               setActiveTab('reports');
               setSearchQuery('');
             }}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium leading-5 transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'reports'
-                ? 'bg-[#5455EE] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:text-slate-900 border border-[#EBECEF]'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <ShieldAlert size={14} />
-            <span>Confidential Reports</span>
+            <Lock size={15} className={activeTab === 'reports' ? 'text-rose-600' : 'text-slate-400'} />
+            <span className="font-semibold">Confidential Reports</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'reports'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-slate-100 text-slate-600'
+                  ? 'bg-rose-100 text-rose-800'
+                  : 'bg-slate-200/80 text-slate-600'
               }`}
             >
               {reports.length}
@@ -201,19 +155,19 @@ export default function FeedbackReportsView({
               setActiveTab('feedback');
               setSearchQuery('');
             }}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium leading-5 transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'feedback'
-                ? 'bg-[#5455EE] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:text-slate-900 border border-[#EBECEF]'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/70'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            <MessageSquareHeart size={14} />
-            <span>Employee Feedback</span>
+            <MessageSquare size={15} className={activeTab === 'feedback' ? 'text-emerald-600' : 'text-slate-400'} />
+            <span className="font-semibold">Employee Feedback</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'feedback'
-                  ? 'bg-white/20 text-white'
-                  : 'bg-slate-100 text-slate-600'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-slate-200/80 text-slate-600'
               }`}
             >
               {feedbackList.length}
@@ -224,14 +178,14 @@ export default function FeedbackReportsView({
         <div className="flex items-center gap-2.5 self-start md:self-auto">
           <button
             onClick={onExportCSV}
-            className="px-4 py-2.5 bg-white border border-[#EBECEF] hover:bg-[#F8F9FD] text-xs font-bold text-slate-700 rounded-2xl flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+            className="px-4 py-2 bg-white border border-[#EBECEF] hover:bg-[#F8F9FD] text-xs font-semibold text-slate-700 rounded-2xl flex items-center gap-2 transition-all shadow-xs cursor-pointer"
           >
             <Download size={14} />
             <span>Export CSV</span>
           </button>
           <button
             onClick={onSchedulePulse}
-            className="px-5 py-2.5 bg-[#5455EE] hover:bg-[#4546DF] text-white text-xs font-bold rounded-2xl flex items-center gap-2 transition-all shadow-md shadow-[#5455EE]/25 cursor-pointer"
+            className="px-4 py-2 bg-[#5455EE] hover:bg-[#4546DF] text-white text-xs font-semibold rounded-2xl flex items-center gap-2 transition-all shadow-xs cursor-pointer"
           >
             <Plus size={14} />
             <span>Schedule Pulse Survey</span>
@@ -248,8 +202,10 @@ export default function FeedbackReportsView({
                 Total Confidential Reports
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">{reports.length}</span>
-                <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-slate-900">
+                  {reports.length}
+                </span>
+                <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
                   2 High Priority
                 </span>
               </div>
@@ -260,8 +216,8 @@ export default function FeedbackReportsView({
                 Under Active Triage
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-[#5455EE]">3</span>
-                <span className="text-xs font-normal leading-[18px] text-slate-500">In Progress</span>
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-[#5455EE]">3</span>
+                <span className="text-xs font-medium leading-[18px] text-slate-500">In Progress</span>
               </div>
             </div>
 
@@ -270,7 +226,7 @@ export default function FeedbackReportsView({
                 Avg Response Time
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">1.4 Days</span>
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-emerald-600">1.4 Days</span>
                 <span className="text-xs font-normal leading-[18px] text-slate-500">Target &lt; 2 Days</span>
               </div>
             </div>
@@ -280,8 +236,8 @@ export default function FeedbackReportsView({
                 Linked Action Plans
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">1 Active</span>
-                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-slate-900">1 Active</span>
+                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
                   AP-01
                 </span>
               </div>
@@ -294,8 +250,10 @@ export default function FeedbackReportsView({
                 Total Feedback Submitted
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">{feedbackList.length}</span>
-                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-slate-900">
+                  {feedbackList.length}
+                </span>
+                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                   100% Constructive
                 </span>
               </div>
@@ -306,7 +264,7 @@ export default function FeedbackReportsView({
                 Process & Tooling Ideas
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-[#5455EE]">2</span>
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-[#5455EE]">2</span>
                 <span className="text-xs font-normal leading-[18px] text-slate-500">Highest Engagement</span>
               </div>
             </div>
@@ -316,7 +274,7 @@ export default function FeedbackReportsView({
                 Onboarding & Culture
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-purple-600">2</span>
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-purple-600">2</span>
                 <span className="text-xs font-normal leading-[18px] text-slate-500">Peer Suggested</span>
               </div>
             </div>
@@ -326,8 +284,8 @@ export default function FeedbackReportsView({
                 Implemented / Planned
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">2 Actions</span>
-                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[28px] font-semibold leading-8 tabular-nums text-emerald-600">2 Actions</span>
+                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                   In Progress
                 </span>
               </div>
@@ -346,306 +304,393 @@ export default function FeedbackReportsView({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
               activeTab === 'reports'
-                ? 'Search reports by ID, concern, department, or keyword...'
+                ? 'Search reports by ID, title, department, or keyword...'
                 : 'Search feedback by ID, suggestion, squad, or keyword...'
             }
             className="w-full pl-9 pr-4 py-2 text-sm font-normal leading-5 bg-[#F8F9FD] border border-slate-200 rounded-xl outline-none focus:border-[#5455EE] transition-all"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter size={14} className="text-slate-400 flex-shrink-0" />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="p-2 text-sm font-medium leading-5 bg-[#F8F9FD] border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-[#5455EE] cursor-pointer"
-          >
-            <option value="all">All Concern Categories</option>
-            <option value="con_01">Burnout & Workload Imbalance</option>
-            <option value="con_02">Unclear Role Expectations & Support</option>
-            <option value="con_03">Recognition & Career Growth</option>
-            <option value="con_04">Collaboration & Change</option>
-          </select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-[#F8F9FD] border border-slate-200 rounded-xl px-2.5 py-1.5">
+            <Filter size={13} className="text-slate-400 flex-shrink-0" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="text-xs font-medium bg-transparent text-slate-700 outline-none cursor-pointer"
+            >
+              <option value="all">All Concern Categories</option>
+              <option value="con_01">Burnout & Workload Imbalance</option>
+              <option value="con_02">Unclear Role Expectations & Support</option>
+              <option value="con_03">Recognition & Career Growth</option>
+              <option value="con_04">Collaboration & Change</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-[#F8F9FD] border border-slate-200 rounded-xl px-2.5 py-1.5">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="text-xs font-medium bg-transparent text-slate-700 outline-none cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="urgent">Action Required / High Priority</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved / Planned</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* 4. TAB CONTENT: REPORTS TAB */}
+      {/* 4. CARD-BASED FEED: CONFIDENTIAL REPORTS TAB */}
       {activeTab === 'reports' && (
-        <div className="bg-white border border-[#EBECEF] rounded-3xl shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-medium uppercase tracking-wider text-xs leading-[18px]">
-                <tr>
-                  <th className="p-4">Report ID</th>
-                  <th className="p-4">Tenure & Dept</th>
-                  <th className="p-4">Disengagement Category</th>
-                  <th className="p-4">Observed Concern & Snippet</th>
-                  <th className="p-4">Priority</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EBECEF]">
-                {filteredReports.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400">
-                      No reports match the current filter or search criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredReports.map((r) => {
-                    const cat = CATEGORIES[r.concernCategory] || CATEGORIES.con_01 || CATEGORIES.other;
-                    return (
-                      <tr
-                        key={r.id}
-                        id={`report-row-${r.id}`}
-                        className="hover:bg-[#F8F9FD] transition-colors"
-                      >
-                        <td className="p-4">
-                          <span className="text-xs font-mono font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
-                            {r.id}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          {r.anonymityType === 'Full Anonymity' ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-semibold text-slate-700 bg-[#F4F5FA] px-2 py-0.5 rounded-lg text-xs border border-[#EBECEF] inline-flex items-center gap-1 w-fit">
-                                <Lock size={10} className="text-[#5455EE]" />
-                                <span>Fully Anonymous</span>
-                              </span>
-                              <div className="text-slate-400 text-xs mt-0.5">Dept & Tenure Hidden</div>
-                            </div>
-                          ) : !r.isAnonymous ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-slate-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg text-xs border border-emerald-200 w-fit">
-                                {r.reporterName || r.employeeCode}
-                              </span>
-                              <div className="text-slate-500 text-xs mt-0.5">{r.department} · {r.tenure}</div>
-                            </div>
-                          ) : (
-                            <div>
-                              <span className="font-semibold text-slate-700 bg-[#F4F5FA] px-2.5 py-0.5 rounded-lg text-xs border border-[#EBECEF]">
-                                {r.tenure}
-                              </span>
-                              <div className="text-slate-400 text-xs mt-0.5">{r.department}</div>
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <span className="font-medium text-slate-800 text-sm leading-5">{cat.name}</span>
-                        </td>
-                        <td className="p-4 max-w-sm">
-                          <div className="text-sm font-semibold leading-5 text-slate-900 truncate">
-                            {r.concernTitle}
-                          </div>
-                          <div className="text-slate-500 text-xs font-normal leading-[18px] truncate mt-0.5">
-                            {r.snippet}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${
-                              r.priority === 'High'
-                                ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}
-                          >
-                            {r.priority}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
-                              r.statusType,
-                              r.status
-                            )}`}
-                          >
-                            {r.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => onReviewReport(r, cat)}
-                            className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-medium rounded-xl text-sm leading-5 transition-colors cursor-pointer"
-                          >
-                            Take Action
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+        <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 sm:p-6 shadow-card flex flex-col gap-3.5">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-base font-semibold leading-6 text-slate-900">
+              Confidential Reports Feed ({filteredReports.length})
+            </h4>
+            <span className="text-xs text-slate-400">
+              Sorted by urgency & submission recency
+            </span>
           </div>
-        </div>
-      )}
 
-      {/* 5. TAB CONTENT: EMPLOYEE FEEDBACK TAB */}
-      {activeTab === 'feedback' && (
-        <div className="bg-white border border-[#EBECEF] rounded-3xl shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-medium uppercase tracking-wider text-xs leading-[18px]">
-                <tr>
-                  <th className="p-4">Feedback ID</th>
-                  <th className="p-4">Department / Squad</th>
-                  <th className="p-4">Theme & Category</th>
-                  <th className="p-4">Constructive Suggestion & Outcome</th>
-                  <th className="p-4">Author / Visibility</th>
-                  <th className="p-4">Review Status</th>
-                  <th className="p-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EBECEF]">
-                {filteredFeedback.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400">
-                      No employee feedback matches the current search criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredFeedback.map((f) => (
-                    <tr
-                      key={f.id}
-                      className="hover:bg-[#F8F9FD] transition-colors"
-                    >
-                      <td className="p-4">
-                        <span className="text-xs font-mono font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
-                          {f.id}
-                        </span>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{f.date}</div>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-semibold text-slate-800 text-xs">
-                          {f.department}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/20">
-                          {f.category}
-                        </span>
-                      </td>
-                      <td className="p-4 max-w-md">
-                        <div className="text-sm font-bold text-slate-900 leading-snug">
-                          {f.title}
-                        </div>
-                        <p className="text-slate-600 text-xs mt-1 line-clamp-2 leading-relaxed">
-                          {f.snippet}
-                        </p>
-                        <div className="mt-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md inline-block border border-emerald-100 font-medium">
-                          <strong>Outcome:</strong> {f.outcome}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5">
-                          <User size={12} className="text-slate-400" />
-                          <span className="font-semibold text-slate-700 text-xs">
-                            {f.privacy}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4">
+          {filteredReports.length === 0 ? (
+            <div className="py-12 px-4 text-center bg-[#F8F9FD] rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-xs">
+                <Lock size={20} className="text-rose-500" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">
+                No reports match the current filter or search criteria
+              </span>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Try clearing search filters or checking other departments.
+              </p>
+            </div>
+          ) : (
+            filteredReports.map((r) => {
+              const cat = CATEGORIES[r.concernCategory] || CATEGORIES.con_01 || CATEGORIES.other;
+              return (
+                <div
+                  key={r.id}
+                  id={`report-card-${r.id}`}
+                  onClick={() => onReviewReport(r, cat)}
+                  className="p-4 sm:p-5 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] hover:bg-[#F2F4FD] hover:border-[#5455EE]/40 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group"
+                >
+                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    {/* Left Icon Pill */}
+                    <div className="px-2.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-mono font-medium flex items-center gap-1.5 flex-shrink-0 shadow-2xs mt-0.5">
+                      <Lock size={12} className="text-rose-600" />
+                      <span className="tracking-wider uppercase">{r.referenceCode || r.id}</span>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex flex-col min-w-0 flex-1 gap-1">
+                      {/* Top Chips Row */}
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
-                            f.statusType,
-                            f.status
-                          )}`}
-                        >
-                          {f.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedFeedbackModal(f);
-                            setFeedbackEditStatus(f.status || 'Need Review');
+                          className="px-2.5 py-0.5 rounded-md font-semibold text-xs border"
+                          style={{
+                            backgroundColor: `${cat.color}12`,
+                            color: cat.color,
+                            borderColor: `${cat.color}30`,
                           }}
-                          className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-medium rounded-xl text-sm leading-5 transition-colors cursor-pointer"
                         >
-                          Review Feedback
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                          {cat.name}
+                        </span>
+
+                        <span className="text-slate-400 font-medium">•</span>
+
+                        <span className="font-medium text-slate-700 flex items-center gap-1">
+                          <Building2 size={12} className="text-slate-400" />
+                          <span>{r.department}</span>
+                        </span>
+
+                        <span className="text-slate-400 font-medium">•</span>
+
+                        {r.anonymityType === 'Full Anonymity' ? (
+                          <span className="text-slate-500 font-medium">Fully Anonymous</span>
+                        ) : !r.isAnonymous ? (
+                          <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.2 rounded border border-emerald-200">
+                            {r.reporterName || r.employeeCode}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 font-medium">Tenure: {r.tenure}</span>
+                        )}
+
+                        <span className="text-slate-400 font-medium">•</span>
+                        <span className="text-slate-400">{r.submissionDate || r.date}</span>
+                      </div>
+
+                      {/* Title */}
+                      <h5 className="text-base font-semibold leading-6 text-slate-900 group-hover:text-[#5455EE] transition-colors mt-0.5">
+                        {r.concernTitle}
+                      </h5>
+
+                      {/* Snippet */}
+                      <p className="text-sm font-normal leading-[22px] text-slate-600 line-clamp-2">
+                        {r.snippet}
+                      </p>
+
+                      {/* Desired Outcome Pill */}
+                      {r.outcome && (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium">
+                            <span className="font-bold">Target Resolution:</span>
+                            <span>{r.outcome}</span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Status & Action Controls */}
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2.5 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${
+                          r.priority === 'High'
+                            ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {r.priority} Priority
+                      </span>
+
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
+                          r.statusType,
+                          r.status
+                        )}`}
+                      >
+                        {r.status}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReviewReport(r, cat);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-sm font-medium leading-5 text-[#5455EE] hover:bg-[#EEF0FF] hover:border-[#5455EE]/40 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Take Action</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 
-      {/* MODAL: REVIEW CONSTRUCTIVE FEEDBACK DETAIL */}
+      {/* 5. CARD-BASED FEED: EMPLOYEE FEEDBACK TAB */}
+      {activeTab === 'feedback' && (
+        <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 sm:p-6 shadow-card flex flex-col gap-3.5">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-base font-semibold leading-6 text-slate-900">
+              Constructive Employee Feedback ({filteredFeedback.length})
+            </h4>
+            <span className="text-xs text-slate-400">
+              Proactive squad improvement suggestions
+            </span>
+          </div>
+
+          {filteredFeedback.length === 0 ? (
+            <div className="py-12 px-4 text-center bg-[#F8F9FD] rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-xs">
+                <MessageSquare size={20} className="text-emerald-500" />
+              </div>
+              <span className="text-sm font-bold text-slate-800">
+                No employee feedback matches the current criteria
+              </span>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Try searching for other squads or topics.
+              </p>
+            </div>
+          ) : (
+            filteredFeedback.map((f) => (
+              <div
+                key={f.id}
+                onClick={() => {
+                  setSelectedFeedbackModal(f);
+                  setFeedbackEditStatus(f.status || 'Need Review');
+                }}
+                className="p-4 sm:p-5 rounded-2xl border border-[#EBECEF] bg-[#F8F9FD] hover:bg-[#F2F4FD] hover:border-[#5455EE]/40 transition-all shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group"
+              >
+                <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                  {/* Left Icon Pill */}
+                  <div className="px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-mono font-medium flex items-center gap-1.5 flex-shrink-0 shadow-2xs mt-0.5">
+                    <MessageSquare size={12} className="text-emerald-600" />
+                    <span className="tracking-wider uppercase">{f.displayId || f.id}</span>
+                  </div>
+
+                  {/* Main Content Area */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-1">
+                    {/* Top Chips Row */}
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="px-2.5 py-0.5 rounded-md font-semibold text-xs bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/20">
+                        {f.category}
+                      </span>
+
+                      <span className="text-slate-400 font-medium">•</span>
+
+                      <span className="font-medium text-slate-700 flex items-center gap-1">
+                        <Building2 size={12} className="text-slate-400" />
+                        <span>{f.department}</span>
+                      </span>
+
+                      <span className="text-slate-400 font-medium">•</span>
+
+                      <div className="flex items-center gap-1 text-slate-600">
+                        <User size={12} className="text-slate-400" />
+                        <span className="font-medium">{f.privacy}</span>
+                      </div>
+
+                      <span className="text-slate-400 font-medium">•</span>
+                      <span className="text-slate-400">{f.date}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h5 className="text-base font-semibold leading-6 text-slate-900 group-hover:text-[#5455EE] transition-colors mt-0.5">
+                      {f.title}
+                    </h5>
+
+                    {/* Snippet */}
+                    <p className="text-sm font-normal leading-[22px] text-slate-600 line-clamp-2">
+                      {f.snippet}
+                    </p>
+
+                    {/* Outcome Highlight */}
+                    {f.outcome && (
+                      <div className="mt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium">
+                          <span className="font-bold">Target Outcome:</span>
+                          <span>{f.outcome}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Status & Action Controls */}
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2.5 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
+                      f.statusType,
+                      f.status
+                    )}`}
+                  >
+                    {f.status}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFeedbackModal(f);
+                      setFeedbackEditStatus(f.status || 'Need Review');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-sm font-medium leading-5 text-[#5455EE] hover:bg-[#EEF0FF] hover:border-[#5455EE]/40 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Eye size={14} />
+                    <span>Review Feedback</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* 6. STREAMLINED FEEDBACK REVIEW MODAL */}
       {selectedFeedbackModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 flex flex-col gap-4 text-xs animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <MessageSquareHeart size={18} className="text-[#5455EE]" />
-                <h4 className="text-xl font-semibold leading-7 text-slate-900">
-                  Feedback Review: {selectedFeedbackModal.id}
-                </h4>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                  <MessageSquare size={16} />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold leading-6 text-slate-900">
+                    Feedback Triage: {selectedFeedbackModal.displayId || selectedFeedbackModal.id}
+                  </h4>
+                  <span className="text-[11px] text-slate-400">
+                    Submitted {selectedFeedbackModal.date}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedFeedbackModal(null)}
-                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
               >
                 ✕
               </button>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <div>
-                <span className="text-xs font-medium uppercase tracking-wider text-slate-500 leading-[18px]">
-                  Subject / Suggestion Title
-                </span>
-                <p className="text-base font-semibold leading-6 text-slate-900 mt-0.5">
-                  {selectedFeedbackModal.title}
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200 text-slate-700 leading-[22px] text-sm font-normal">
-                {selectedFeedbackModal.snippet}
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-normal leading-[22px]">
-                <span className="font-bold block mb-0.5">Target Positive Outcome:</span>
-                <p>{selectedFeedbackModal.outcome}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-2 text-[11px]">
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">Department Scope</span>
-                  <span className="font-bold text-slate-800">{selectedFeedbackModal.department}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">Visibility Choice</span>
-                  <span className="font-bold text-slate-800">{selectedFeedbackModal.privacy}</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-[#EEF0FF]/60 border border-[#5455EE]/30 flex items-center justify-between gap-3">
-                <label htmlFor="feedback-status-select" className="text-xs font-bold text-slate-800 whitespace-nowrap">
-                  Change Feedback Status:
-                </label>
-                <select
-                  id="feedback-status-select"
-                  value={feedbackEditStatus}
-                  onChange={(e) => setFeedbackEditStatus(e.target.value)}
-                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-[#5455EE] shadow-2xs cursor-pointer"
-                >
-                  <option value="Need Review">Need Review</option>
-                  <option value="Reviewed">Reviewed</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                </select>
-              </div>
+            {/* Scope Strip */}
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-[#F8F9FD] border border-slate-200 font-medium text-slate-700">
+                Squad: {selectedFeedbackModal.department}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 font-medium text-[#5455EE]">
+                {selectedFeedbackModal.privacy}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 font-medium text-emerald-800">
+                {selectedFeedbackModal.category}
+              </span>
             </div>
 
+            {/* Title & Description */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 leading-[18px]">
+                Suggestion Topic
+              </span>
+              <h5 className="text-base font-semibold leading-6 text-slate-900">
+                {selectedFeedbackModal.title}
+              </h5>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200 text-slate-800 leading-[22px] text-sm font-normal">
+              {selectedFeedbackModal.snippet}
+            </div>
+
+            {/* Target Outcome */}
+            <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 text-sm font-normal leading-[22px]">
+              <span className="font-semibold block mb-0.5 text-emerald-800 text-xs uppercase tracking-wider">
+                Target Positive Outcome:
+              </span>
+              <p>{selectedFeedbackModal.outcome}</p>
+            </div>
+
+            {/* Triage Status Control */}
+            <div className="p-3.5 rounded-2xl bg-[#EEF0FF]/60 border border-[#5455EE]/30 flex items-center justify-between gap-3">
+              <label htmlFor="feedback-status-select" className="text-xs font-bold text-slate-800 whitespace-nowrap">
+                Update Feedback Status:
+              </label>
+              <select
+                id="feedback-status-select"
+                value={feedbackEditStatus}
+                onChange={(e) => setFeedbackEditStatus(e.target.value)}
+                className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-[#5455EE] shadow-2xs cursor-pointer"
+              >
+                <option value="Need Review">Need Review</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Planned for Q4">Planned for Q4</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+
+            {/* Modal Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-              <span className="text-[11px] text-slate-400">Current: {selectedFeedbackModal.status}</span>
+              <span className="text-[11px] text-slate-400">
+                Current Status: <strong>{selectedFeedbackModal.status}</strong>
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -657,18 +702,23 @@ export default function FeedbackReportsView({
                 <button
                   type="button"
                   onClick={() => {
-                    setFeedbackList((prev) =>
-                      prev.map((item) =>
-                        item.id === selectedFeedbackModal.id
-                          ? { ...item, status: feedbackEditStatus, reviewStatus: feedbackEditStatus === 'Need Review' ? 'Pending Review' : 'Reviewed by HR' }
-                          : item
-                      )
-                    );
+                    if (updateFeedback) {
+                      updateFeedback(selectedFeedbackModal.id, {
+                        status: feedbackEditStatus,
+                        reviewStatus: feedbackEditStatus === 'Need Review' ? 'Pending Review' : 'Reviewed by HR',
+                        statusType:
+                          feedbackEditStatus === 'Resolved' || feedbackEditStatus === 'Planned for Q4'
+                            ? 'resolved'
+                            : feedbackEditStatus === 'In Progress'
+                            ? 'review'
+                            : 'new',
+                      });
+                    }
                     setSelectedFeedbackModal(null);
                   }}
                   className="px-4 py-2 rounded-xl bg-[#5455EE] text-white font-medium text-sm leading-5 hover:bg-[#4344dd] transition-colors cursor-pointer shadow-xs"
                 >
-                  Save Status & Changes
+                  Save Status
                 </button>
               </div>
             </div>

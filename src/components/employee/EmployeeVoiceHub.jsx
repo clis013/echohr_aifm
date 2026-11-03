@@ -55,19 +55,19 @@ export default function EmployeeVoiceHub({
         </p>
       </div>
 
-      {/* Pulse Survey Reminder Card: Clean & Direct */}
+      {/* Pulse Survey Reminder Card: Lively, Human & Warm (活泼) */}
       {!hasFilledPulse && (
-        <div className="px-5 py-3 rounded-2xl bg-[#EEF0FF]/80 border border-[#5455EE]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#5455EE] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-              <ClipboardCheck size={16} />
+        <div className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-[#EEF0FF] via-[#F3F4FE] to-[#FAF8FF] border border-[#5455EE]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-2xl bg-[#5455EE] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+              <ClipboardCheck size={18} />
             </div>
             <div>
-              <span className="text-sm font-semibold leading-5 text-slate-900">
-                Weekly Pulse Survey Pending
+              <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                Hey there! Your weekly pulse check is still waiting for you ~ ✨
               </span>
-              <p className="text-[13px] font-normal leading-5 text-slate-600">
-                Takes ~2 min · Anonymous ratings on workload and team support.
+              <p className="text-xs text-slate-600 mt-0.5 leading-snug">
+                Your survey is still empty! Takes just 1 minute — share how your week is feeling so we can shape real team support 🚀
               </p>
             </div>
           </div>
@@ -75,10 +75,9 @@ export default function EmployeeVoiceHub({
           <button
             type="button"
             onClick={() => onOpenModal('pulse')}
-            className="px-3.5 py-1.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto flex-shrink-0"
+            className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto flex-shrink-0 hover:scale-[1.02]"
           >
-            <span>Take Survey</span>
-            <ArrowRight size={14} />
+            <span>Fill it in ~ 🚀</span>
           </button>
         </div>
       )}

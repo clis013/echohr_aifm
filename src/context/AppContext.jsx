@@ -58,6 +58,83 @@ export function AppProvider({ children }) {
   const [expandedConcernId, setExpandedConcernId] = useState(null);
   const [evidenceModalConcern, setEvidenceModalConcern] = useState(null);
 
+  // Cross-Persona Synchronized Reports and Feedback State
+  const [reportsList, setReportsList] = useState(() => dataService.getAllReports());
+  const [feedbackList, setFeedbackList] = useState(() => [
+    {
+      id: 'FDB-1042',
+      displayId: 'F001',
+      date: '19 October 2026',
+      department: 'Engineering · Platform Squad',
+      category: 'Process & Tooling',
+      categoryKey: 'con_01',
+      title: 'Standardizing sprint brief checklists and priority trade-offs',
+      snippet:
+        'Proposing a brief definition-of-done kickoff checklist for each sprint to prevent conflicting task handoffs and ambiguous deliverables.',
+      outcome: 'Clearer task ownership and less sprint disruption for newer hires.',
+      privacy: 'Anonymous Employee',
+      isAnonymous: true,
+      reviewStatus: 'Reviewed by HR',
+      status: 'In Review',
+      statusType: 'review',
+      upvotes: 18,
+    },
+    {
+      id: 'FDB-1038',
+      displayId: 'F002',
+      date: '18 October 2026',
+      department: 'Engineering · Core Backend',
+      category: 'Process & Tooling',
+      categoryKey: 'con_02',
+      title: 'Centralized architectural decision records (ADRs) to avoid contradictory review feedback',
+      snippet:
+        'Different tech leads provide conflicting architectural directions on PRs. A shared ADR template in Notion/GitHub would unify review expectations.',
+      outcome: 'Unified code review standards, less rework, and faster merge cycles.',
+      privacy: 'Anonymous Dev',
+      isAnonymous: true,
+      reviewStatus: 'Action Plan Linked',
+      status: 'AP-01 Linked',
+      statusType: 'linked',
+      upvotes: 24,
+    },
+    {
+      id: 'FDB-1025',
+      displayId: 'F003',
+      date: '15 October 2026',
+      department: 'Product & Design',
+      category: 'Onboarding & Mentorship',
+      categoryKey: 'con_03',
+      title: 'Dedicated onboarding buddy pairings during first 60 days',
+      snippet:
+        'New product specialists spend significant time hunting down previous client presentation decks and launch checklist templates without knowing who to ping.',
+      outcome: 'Smoother ramp-up, faster time-to-first-deliverable, and reduced hesitation asking questions.',
+      privacy: 'Named (Maya · Assoc. Specialist)',
+      isAnonymous: false,
+      reviewStatus: 'Reviewed by HR',
+      status: 'Planned for Q4',
+      statusType: 'planned',
+      upvotes: 12,
+    },
+    {
+      id: 'FDB-1019',
+      displayId: 'F004',
+      date: '12 October 2026',
+      department: 'Sales & Marketing',
+      category: 'Team Culture & Workflow',
+      categoryKey: 'con_04',
+      title: 'Async daily standups on Slack to preserve morning deep-work focus',
+      snippet:
+        'Our daily morning standup has expanded into a 35-minute verbal status readout. Moving standard updates to async Slack threads would preserve uninterrupted engineering & campaign focus.',
+      outcome: 'Regained 2.5 hours of weekly focused flow time across 8 reps.',
+      privacy: 'Anonymous Rep',
+      isAnonymous: true,
+      reviewStatus: 'Reviewed by HR',
+      status: 'Trial Active',
+      statusType: 'trial',
+      upvotes: 9,
+    },
+  ]);
+
   // HR Company Resources & Knowledge Base State
   const [companyPolicies, setCompanyPolicies] = useState(() => COMPANY_POLICIES);
   const [unansweredQuestions, setUnansweredQuestions] = useState(() => INITIAL_UNANSWERED_QUESTIONS);
@@ -193,11 +270,39 @@ export function AppProvider({ children }) {
           return [newPlan, ...prev];
         }
       });
+      // Synchronize actionState for Daniel Lim
+      setActionState((prev) => ({
+        ...prev,
+        status: 'In progress',
+        assignedManager: actionOwner ? actionOwner.split('—')[0].trim() : prev.assignedManager,
+        actionsTaken: actions?.[0]?.text || prev.actionsTaken,
+      }));
     } else {
       if (item) {
         item.status = statusVal;
       }
-      showToast(`Report ${item?.id} status updated to "${statusVal}"`);
+      setReportsList((prev) =>
+        prev.map((r) =>
+          r.id === item?.id || r.referenceCode === item?.referenceCode || (r.employeeCode && r.employeeCode === item?.employeeCode)
+            ? {
+                ...r,
+                status: statusVal,
+                statusType:
+                  statusVal === 'Resolved'
+                    ? 'resolved'
+                    : statusVal === 'Escalated'
+                    ? 'urgent'
+                    : statusVal === 'In Progress'
+                    ? 'review'
+                    : 'action_needed',
+              }
+            : r
+        )
+      );
+      if (item?.referenceCode === 'ANON-4827' || item?.id === 'R004' || item?.id === 'ANON-4827') {
+        if (statusVal === 'Resolved') setIsReportResolved(true);
+      }
+      showToast(`Report ${item?.id || item?.referenceCode || ''} status updated to "${statusVal}"`);
     }
   }, [showToast]);
 
@@ -205,8 +310,37 @@ export function AppProvider({ children }) {
     setActionState((prev) => ({ ...prev, ...newState }));
   }, []);
 
+  const addReport = useCallback((newReport) => {
+    setReportsList((prev) => [newReport, ...prev]);
+    showToast(`Confidential Report ${newReport.id || newReport.displayId || ''} logged & routed to HR Triage`);
+  }, [showToast]);
+
+  const updateReport = useCallback((reportId, updates) => {
+    setReportsList((prev) =>
+      prev.map((r) =>
+        r.id === reportId || r.referenceCode === reportId || r.displayId === reportId
+          ? { ...r, ...updates }
+          : r
+      )
+    );
+  }, []);
+
+  const addFeedback = useCallback((newFeedback) => {
+    setFeedbackList((prev) => [newFeedback, ...prev]);
+    showToast(`Feedback shared and routed to leadership review.`);
+  }, [showToast]);
+
+  const updateFeedback = useCallback((feedbackId, updates) => {
+    setFeedbackList((prev) =>
+      prev.map((f) =>
+        f.id === feedbackId || f.displayId === feedbackId ? { ...f, ...updates } : f
+      )
+    );
+  }, []);
+
   const handleNewReportSubmit = useCallback((reportData) => {
     const newReport = dataService.submitNewReport(reportData);
+    setReportsList((prev) => [newReport, ...prev]);
     showToast(`Report ${newReport.id} logged and routed to HR Triage`);
   }, [showToast]);
 
@@ -368,16 +502,19 @@ export function AppProvider({ children }) {
   }, [department]);
 
   const allReports = useMemo(() => {
-    return dataService.getAllReports();
-  }, [department, modalState]);
+    return reportsList;
+  }, [reportsList]);
 
   const filteredConcerns = useMemo(() => {
     return currentDeptData.priorityConcerns || [];
   }, [currentDeptData]);
 
   const filteredReports = useMemo(() => {
-    return currentDeptData.reports || [];
-  }, [currentDeptData]);
+    if (department === 'all') return reportsList;
+    return reportsList.filter(
+      (r) => (r.department || '').toLowerCase().includes(department.toLowerCase())
+    );
+  }, [reportsList, department]);
 
   const value = {
     // Role & Navigation
@@ -405,6 +542,18 @@ export function AppProvider({ children }) {
     handleConfirmModal,
     isAiDrawerOpen,
     setIsAiDrawerOpen,
+
+    // Synchronized Reports and Feedback
+    reportsList,
+    setReportsList,
+    allReports,
+    filteredReports,
+    addReport,
+    updateReport,
+    feedbackList,
+    setFeedbackList,
+    addFeedback,
+    updateFeedback,
 
     // Eko Chat History
     isChatHistoryOpen,
@@ -464,9 +613,7 @@ export function AppProvider({ children }) {
 
     // Data models
     currentDeptData,
-    allReports,
     filteredConcerns,
-    filteredReports,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

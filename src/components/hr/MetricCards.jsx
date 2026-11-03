@@ -13,9 +13,11 @@ export default function MetricCards({
           value: metrics?.pulseResponseRate?.value || operationalIndicators.pulseResponseRate?.value || '81%',
           trend: metrics?.pulseResponseRate?.countText || operationalIndicators.pulseResponseRate?.trend || '81 of 100 engineers',
           status: metrics?.pulseResponseRate?.status || 'Active Participation',
-          isPrimary: true,
+          isPrimary: false,
+          iconBox: 'bg-[#EEF0FF] text-[#5455EE] border border-indigo-200/60',
+          trendClass: 'bg-[#EEF0FF] text-[#5455EE] border border-indigo-200/60',
           icon: Activity,
-          sparklineColor: '#FFFFFF',
+          sparklineColor: '#5455EE',
           sparklinePath: 'M2 18 L16 14 L30 19 L44 9 L58 12 L68 4',
         },
         {
@@ -61,9 +63,11 @@ export default function MetricCards({
           value: metrics?.pulseResponseRate?.value ?? '78%',
           trend: metrics?.pulseResponseRate?.countText || metrics?.pulseResponseRate?.trend || '234 of 300 employees',
           status: metrics?.pulseResponseRate?.status ?? 'Healthy Participation',
-          isPrimary: true,
+          isPrimary: false,
+          iconBox: 'bg-[#EEF0FF] text-[#5455EE] border border-indigo-200/60',
+          trendClass: 'bg-[#EEF0FF] text-[#5455EE] border border-indigo-200/60',
           icon: Activity,
-          sparklineColor: '#FFFFFF',
+          sparklineColor: '#5455EE',
           sparklinePath: 'M2 18 L16 14 L30 19 L44 9 L58 12 L68 4',
         },
         {
@@ -108,56 +112,6 @@ export default function MetricCards({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((c, i) => {
         const Icon = c.icon;
-
-        if (c.isPrimary) {
-          return (
-            <div
-              key={i}
-              className="bg-[#5455EE] text-white rounded-3xl p-4 sm:p-5 flex flex-col justify-between hover:-translate-y-1 hover:shadow-primaryGlow transition-all duration-200 shadow-md relative overflow-hidden group cursor-default min-h-[140px]"
-            >
-              <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
-
-              <div className="absolute -right-2 -bottom-1 pointer-events-none opacity-25 w-32 h-14 overflow-hidden">
-                <svg viewBox="0 0 70 24" fill="none" className="w-full h-full">
-                  <path
-                    d={c.sparklinePath}
-                    stroke="#FFFFFF"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center flex-shrink-0 shadow-inner">
-                    <Icon size={18} strokeWidth={2.2} />
-                  </div>
-                  <span className="text-sm font-medium leading-5 text-white tracking-normal">
-                    {c.title}
-                  </span>
-                </div>
-                <div className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-xs transition-colors flex-shrink-0">
-                  <ArrowUpRight size={13} />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 my-2 relative z-10">
-                <span className="text-2xl sm:text-[30px] font-semibold text-white tracking-tight leading-9 tabular-nums">
-                  {c.value}
-                </span>
-                <span className="text-xs font-medium leading-[18px] px-2 py-0.5 rounded-lg bg-white/20 text-white flex items-center gap-1">
-                  <span>{c.trend}</span>
-                </span>
-              </div>
-
-              <div className="text-xs font-normal leading-[18px] text-white/80 relative z-10">
-                {c.status}
-              </div>
-            </div>
-          );
-        }
 
         return (
           <div

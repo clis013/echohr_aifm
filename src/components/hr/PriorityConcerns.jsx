@@ -864,8 +864,74 @@ export default function PriorityConcerns({
                         </span>
                       </div>
 
-                      <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EBECEF] space-y-3 text-sm">
-                        {/* Executive Data Reporting Grid: wide 3-column layout when card is expanded */}
+                      <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EBECEF] space-y-4 text-sm">
+                        {/* 1. Multi-Signal Synthesis Weight Bar (Visual Graph) */}
+                        <div className="p-3 bg-[#F8F9FD] rounded-2xl border border-slate-200 flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between text-xs flex-wrap gap-1">
+                            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-[#5455EE] animate-pulse"></span>
+                              <span>Multi-Signal Contribution Breakdown</span>
+                            </span>
+                            <span className="text-xs font-semibold text-[#5455EE] bg-[#EEF0FF] px-2 py-0.5 rounded-full border border-[#5455EE]/20">
+                              Synthesized Confidence: 94% (5 Channels)
+                            </span>
+                          </div>
+
+                          {/* Stacked Distribution Bar */}
+                          <div className="h-3.5 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
+                            <div
+                              style={{ width: '35%' }}
+                              className="bg-[#6366F1] h-full hover:opacity-90 transition-all cursor-pointer"
+                              title="Pulse Survey: 35% Weight"
+                            />
+                            <div
+                              style={{ width: '25%' }}
+                              className="bg-[#3B82F6] h-full hover:opacity-90 transition-all cursor-pointer"
+                              title="Confidential Reports: 25% Weight"
+                            />
+                            <div
+                              style={{ width: '20%' }}
+                              className="bg-[#A855F7] h-full hover:opacity-90 transition-all cursor-pointer"
+                              title="Community Board: 20% Weight"
+                            />
+                            <div
+                              style={{ width: '10%' }}
+                              className="bg-[#F59E0B] h-full hover:opacity-90 transition-all cursor-pointer"
+                              title="AI Telemetry (Eko): 10% Weight"
+                            />
+                            <div
+                              style={{ width: '10%' }}
+                              className="bg-[#10B981] h-full hover:opacity-90 transition-all cursor-pointer"
+                              title="Operational Indicators: 10% Weight"
+                            />
+                          </div>
+
+                          {/* Visual Legend */}
+                          <div className="flex items-center justify-between flex-wrap gap-2 text-[11px] text-slate-600 pt-0.5">
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <span className="w-2.5 h-2.5 rounded-sm bg-[#6366F1]"></span>
+                              Pulse Survey (35%)
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <span className="w-2.5 h-2.5 rounded-sm bg-[#3B82F6]"></span>
+                              Reports (25%)
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <span className="w-2.5 h-2.5 rounded-sm bg-[#A855F7]"></span>
+                              Community (20%)
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <span className="w-2.5 h-2.5 rounded-sm bg-[#F59E0B]"></span>
+                              AI Telemetry (10%)
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <span className="w-2.5 h-2.5 rounded-sm bg-[#10B981]"></span>
+                              Operational (10%)
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Executive Data Reporting Grid with Visual Gauges: wide 3-column layout when card is expanded */}
                         <div className={`grid grid-cols-1 ${hasExpandedCard ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'} gap-2.5`}>
                           {getStructuredEvidenceTiles(item, isDepartmentView, departmentName).map((tile, idx) => {
                             const isFifth = idx === 4;
@@ -873,55 +939,123 @@ export default function PriorityConcerns({
                             return (
                               <div
                                 key={tile.key || idx}
-                                className={`p-3 rounded-xl bg-[#FBFBFE] hover:bg-[#F6F7FD] border border-slate-200/80 transition-all flex flex-col justify-between gap-1.5 ${
+                                className={`p-3 rounded-xl bg-[#FBFBFE] hover:bg-[#F6F7FD] border border-slate-200/80 transition-all flex flex-col justify-between gap-2 ${
                                   isFifth ? (hasExpandedCard ? 'lg:col-span-2' : 'md:col-span-2') : ''
                                 }`}
                               >
-                                <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 border ${tile.iconStyle}`}
-                                    >
-                                      <IconComponent size={13} strokeWidth={2.2} />
+                                <div>
+                                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 border ${tile.iconStyle}`}
+                                      >
+                                        <IconComponent size={13} strokeWidth={2.2} />
+                                      </div>
+                                      <span className="text-sm font-semibold leading-5 text-slate-800">
+                                        {tile.channel}
+                                      </span>
                                     </div>
-                                    <span className="text-sm font-medium leading-5 text-slate-800">
-                                      {tile.channel}
-                                    </span>
+
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      {tile.pills.map((pill, pIdx) => (
+                                        <span
+                                          key={pIdx}
+                                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium leading-[18px] ${
+                                            pill.alert
+                                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                              : pill.delta
+                                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                              : 'bg-white text-slate-700 border border-slate-200 shadow-2xs'
+                                          }`}
+                                        >
+                                          {pill.label && (
+                                            <span className="text-slate-400 font-normal">
+                                              {pill.label}:
+                                            </span>
+                                          )}
+                                          <span className="font-semibold tabular-nums">{pill.val}</span>
+                                          {pill.delta && (
+                                            <span className="text-rose-600 font-semibold tabular-nums">
+                                              ({pill.delta})
+                                            </span>
+                                          )}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
 
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    {tile.pills.map((pill, pIdx) => (
-                                      <span
-                                        key={pIdx}
-                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium leading-[18px] ${
-                                          pill.alert
-                                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                            : pill.delta
-                                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                            : 'bg-white text-slate-700 border border-slate-200 shadow-2xs'
-                                        }`}
-                                      >
-                                        {pill.label && (
-                                          <span className="text-slate-400 font-normal">
-                                            {pill.label}:
-                                          </span>
-                                        )}
-                                        <span className="font-semibold tabular-nums">{pill.val}</span>
-                                        {pill.delta && (
-                                          <span className="text-rose-600 font-semibold tabular-nums">
-                                            ({pill.delta})
-                                          </span>
-                                        )}
-                                      </span>
-                                    ))}
+                                  <div className="text-sm font-normal leading-[22px] text-slate-700 mt-2">
+                                    <strong className="font-semibold text-slate-900">
+                                      {tile.headline}:{' '}
+                                    </strong>
+                                    <span>{tile.text}</span>
                                   </div>
                                 </div>
 
-                                <div className="text-sm font-normal leading-[22px] text-slate-700 mt-1">
-                                  <strong className="font-medium text-slate-900">
-                                    {tile.headline}:{' '}
-                                  </strong>
-                                  <span>{tile.text}</span>
+                                {/* Channel Visual Indicator Meter */}
+                                <div className="mt-1 pt-2 border-t border-slate-100 flex flex-col gap-1">
+                                  {tile.key === 'pulse' && (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Satisfaction Score: <strong className="text-amber-700">2.8 / 5.0</strong></span>
+                                        <span className="text-slate-400">Target ≥ 4.0</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden relative">
+                                        <div className="bg-amber-500 h-full rounded-full" style={{ width: '56%' }}></div>
+                                        <div className="absolute top-0 bottom-0 left-[80%] w-0.5 bg-slate-400" title="Target Benchmark (4.0)"></div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {tile.key === 'feedback' && (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Incident Severity Breakdown</span>
+                                        <span className="text-blue-700 font-semibold">1 Confidential · 3 Feedback</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
+                                        <div className="bg-rose-500 h-full" style={{ width: '25%' }} title="High Priority Confidential (25%)"></div>
+                                        <div className="bg-blue-500 h-full" style={{ width: '75%' }} title="Voluntary Feedback (75%)"></div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {tile.key === 'community' && (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Community Heat & Reach</span>
+                                        <span className="text-purple-700 font-semibold">Top 5% Trending Thread</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-purple-500 h-full rounded-full" style={{ width: '85%' }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {tile.key === 'ai' && (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Eko Telemetry Query Cluster</span>
+                                        <span className="text-amber-700 font-semibold">2.4× Above Normal</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-amber-500 h-full rounded-full" style={{ width: '72%' }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {tile.key === 'ops' && (
+                                    <div className="flex flex-col gap-1">
+                                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Capacity & Overtime Surge</span>
+                                        <span className="text-rose-700 font-semibold">+18% (Variance Limit: +5%)</span>
+                                      </div>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden relative">
+                                        <div className="bg-rose-500 h-full rounded-full" style={{ width: '78%' }}></div>
+                                        <div className="absolute top-0 bottom-0 left-[28%] w-0.5 bg-slate-400" title="Safe Capacity Limit"></div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -953,13 +1087,39 @@ export default function PriorityConcerns({
                       </div>
                     </div>
 
-                    {/* 4. AI interpretation: Spacious container with comfortable padding so text never sticks to borders */}
+                    {/* 4. AI interpretation: Spacious container with visual analysis representation */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-[#5455EE]">
-                        <Sparkles size={15} />
-                        <span>AI Interpretation</span>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-[#5455EE]">
+                          <Sparkles size={15} />
+                          <span>AI Synthesized Analysis & Root Cause</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            94% Confidence
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium">5/5 Signals Aligned</span>
+                        </div>
                       </div>
-                      <div className="p-4 sm:p-5 rounded-2xl bg-[#EEF0FF]/60 border border-[#5455EE]/25 shadow-2xs">
+
+                      <div className="p-4 sm:p-5 rounded-2xl bg-[#EEF0FF]/60 border border-[#5455EE]/25 shadow-2xs flex flex-col gap-3">
+                        {/* Analytical Indicator Badges */}
+                        <div className="flex items-center gap-2 flex-wrap text-xs">
+                          <span className="px-2.5 py-1 rounded-xl bg-white border border-[#5455EE]/30 text-[#5455EE] font-semibold flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-slate-400 font-normal">Primary Cause:</span>
+                            <span>{item.id === 'CON-01' ? 'Task Allocation Ambiguity' : item.id === 'CON-02' ? 'Unclear PR Acceptance Criteria' : 'Omission from Milestone Retros'}</span>
+                          </span>
+                          <span className="px-2.5 py-1 rounded-xl bg-white border border-rose-200 text-rose-700 font-semibold flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-slate-400 font-normal">Core Risk:</span>
+                            <span>{item.id === 'CON-01' ? 'Probationary Attrition' : item.id === 'CON-02' ? 'Sprint Velocity Degradation' : 'Recognition Deficit'}</span>
+                          </span>
+                          <span className="px-2.5 py-1 rounded-xl bg-white border border-amber-200 text-amber-800 font-semibold flex items-center gap-1.5 shadow-2xs">
+                            <span className="text-slate-400 font-normal">Recommended SLA:</span>
+                            <span>Within 5 Days</span>
+                          </span>
+                        </div>
+
                         <p className="text-sm font-normal leading-[22px] text-slate-800">
                           {item.aiInterpretation ||
                             (item.id === 'CON-01'

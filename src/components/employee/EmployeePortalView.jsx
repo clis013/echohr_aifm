@@ -113,7 +113,7 @@ export default function EmployeePortalView({
   const [detailRecordTarget, setDetailRecordTarget] = useState(null);
   const [recordPrivacyOpen, setRecordPrivacyOpen] = useState(false);
 
-  const { askEkoQuestion } = useApp();
+  const { askEkoQuestion, addReport, addFeedback, reportsList, feedbackList } = useApp();
   const [activeVoiceTab, setActiveVoiceTab] = useState(
     initialVoiceTab === 'pulse' || initialVoiceTab === 'report' || initialVoiceTab === 'feedback'
       ? initialVoiceTab
@@ -177,6 +177,40 @@ export default function EmployeePortalView({
       setMayaRecords(updater);
     }
   };
+
+  // Synchronize Maya's submitted records with HR status updates in real-time
+  useEffect(() => {
+    if (!isManager && reportsList && feedbackList) {
+      setMayaRecords((prev) =>
+        prev.map((rec) => {
+          if (rec.type === 'report' && (rec.id === 'ANON-4827' || rec.systemId === 'ANON-4827')) {
+            const hrReport = reportsList.find((r) => r.referenceCode === 'ANON-4827' || r.id === 'R004');
+            if (hrReport) {
+              const hrStatus = isReportResolved ? 'Resolved' : hrReport.status;
+              return {
+                ...rec,
+                status: hrStatus,
+                resolutionStatus: hrStatus,
+                reviewStatus: hrReport.status === 'Needs HR Review' || hrReport.status === 'Action Required' ? 'Pending Review' : 'Reviewed',
+              };
+            }
+          }
+          if (rec.type === 'feedback') {
+            const hrFeedback = feedbackList.find((f) => f.id === rec.id || f.id === rec.systemId);
+            if (hrFeedback) {
+              return {
+                ...rec,
+                status: hrFeedback.status,
+                resolutionStatus: hrFeedback.status,
+                reviewStatus: hrFeedback.reviewStatus || 'Reviewed',
+              };
+            }
+          }
+          return rec;
+        })
+      );
+    }
+  }, [reportsList, feedbackList, isReportResolved, isManager]);
 
   // Modal: Add Update / Follow-up Note to Record
   const [showAddUpdateModal, setShowAddUpdateModal] = useState(false);
@@ -401,12 +435,12 @@ Please confirm this priority order with your manager (Daniel Lim).`,
       reviewStatus: 'Aggregated',
       resolutionStatus: 'Recorded',
       scores: {
-        workload: pulseResponses.workload ?? 6,
-        clarity: pulseResponses.clarity ?? 6,
-        support: pulseResponses.support ?? 6,
-        help: pulseResponses.help ?? 6,
+        workload: pulseResponses.workload !== undefined && pulseResponses.workload !== null ? pulseResponses.workload : 3,
+        clarity: pulseResponses.clarity !== undefined && pulseResponses.clarity !== null ? pulseResponses.clarity : 3,
+        support: pulseResponses.support !== undefined && pulseResponses.support !== null ? pulseResponses.support : 3,
+        help: pulseResponses.help !== undefined && pulseResponses.help !== null ? pulseResponses.help : 3,
       },
-      comment: pulseComment || MAYA_PROFILE.pulseComment,
+      comment: pulseComment.trim() ? pulseComment.trim() : 'No additional comment provided.',
     };
     setSubmittedRecords((prev) => {
       const existingIdx = prev.findIndex((r) => r.type === 'pulse');
@@ -449,6 +483,25 @@ Please confirm this priority order with your manager (Daniel Lim).`,
     };
 
     setSubmittedRecords((prev) => [newRecord, ...prev]);
+    if (addFeedback) {
+      addFeedback({
+        id: sysId,
+        displayId: `F${displayNum}`,
+        date: 'Today, 20 Oct',
+        department: 'Engineering · Platform Squad',
+        category: 'Process & Tooling',
+        categoryKey: feedbackCategory === 'process' ? 'con_01' : 'con_02',
+        title: feedbackTitle.trim(),
+        snippet: feedbackMessage.trim(),
+        outcome: feedbackOutcome.trim() || 'Process and capacity improvements',
+        privacy: feedbackAnonymous ? 'Anonymous Employee' : 'Maya Tan · Assoc. Specialist',
+        isAnonymous: feedbackAnonymous,
+        reviewStatus: 'Pending Review',
+        status: 'Need Review',
+        statusType: 'new',
+        upvotes: 0,
+      });
+    }
     setFeedbackTitle('');
     setFeedbackMessage('');
     setFeedbackOutcome('');
@@ -515,6 +568,27 @@ Please confirm this priority order with your manager (Daniel Lim).`,
       newReportRecord,
       ...prev.filter((r) => r.id !== 'ANON-4827'),
     ]);
+
+    if (addReport) {
+      addReport({
+        id: `R00${Date.now().toString().slice(-3)}`,
+        referenceCode: 'ANON-4827',
+        employeeCode: 'ANON-4827',
+        isAnonymous: privacyChoice !== 'optionC',
+        anonymityType: privacyChoice === 'optionB' ? 'Full Anonymity' : 'Department-Level Anonymous',
+        department: privacyChoice === 'optionB' ? 'Undisclosed' : 'Engineering',
+        tenure: '5 months',
+        date: 'Today, 20 Oct',
+        priority: 'High',
+        status: 'Action Required',
+        statusType: 'action_needed',
+        urgencyLabel: 'Need Action',
+        concernCategory: reportCategory,
+        concernTitle: newReportRecord.title,
+        snippet: reportDescription || 'Repeated task assignments from senior colleague without manager alignment.',
+        outcome: reportOutcome || 'Clear task ownership and workload rebalancing.',
+      });
+    }
 
     setVoiceTab(null);
 

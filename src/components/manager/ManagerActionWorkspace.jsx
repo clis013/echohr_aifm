@@ -22,7 +22,7 @@ export default function ManagerActionWorkspace({
   actionState,
   onUpdateActionState,
 }) {
-  const { setActionPlans, showToast } = useApp();
+  const { actionPlans, setActionPlans, showToast } = useApp();
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +72,56 @@ export default function ManagerActionWorkspace({
       lastUpdate: '15 Sep 2026',
     },
   ]);
+
+  // Synchronize assignedRecords with global actionPlans from HR in real-time
+  React.useEffect(() => {
+    if (actionPlans && actionPlans.length > 0) {
+      setAssignedRecords((prev) => {
+        const synced = prev.map((local) => {
+          const global = actionPlans.find((p) => p.id === local.id);
+          if (global) {
+            return {
+              ...local,
+              title: global.title || local.title,
+              status: global.status || local.status,
+              priority: global.priority || local.priority,
+              progressUpdate: global.managerUpdate || local.progressUpdate,
+              lastUpdate: global.lastUpdate || local.lastUpdate,
+            };
+          }
+          return local;
+        });
+
+        actionPlans.forEach((plan) => {
+          if (
+            plan.id !== 'AP-01' &&
+            plan.id !== 'AP-00' &&
+            !synced.some((s) => s.id === plan.id) &&
+            ((plan.owner && plan.owner.toLowerCase().includes('daniel')) ||
+             (plan.department && plan.department.toLowerCase().includes('eng')))
+          ) {
+            synced.unshift({
+              id: plan.id,
+              title: plan.title,
+              concernTheme: plan.linkedConcernTitle || 'Engineering Practice',
+              anonymizedConcern: plan.anonymizedSummary || 'Action plan assigned by HR.',
+              requestedActions: plan.actionItems?.map((a) => a.title) || [
+                'Review squad task allocations and ensure priority alignment.',
+              ],
+              dueDate: plan.dueDate || plan.due || '30 Oct 2026',
+              priority: plan.priority || 'High',
+              status: plan.status || 'In progress',
+              department: plan.department || 'Engineering',
+              progressUpdate: plan.managerUpdate || 'Action plan initialized by HR. Pending first manager review.',
+              lastUpdate: plan.lastUpdate || 'Just now',
+            });
+          }
+        });
+
+        return synced;
+      });
+    }
+  }, [actionPlans]);
 
   // Active plan being updated in modal
   const activePlan = selectedPlanModal || assignedRecords[0];

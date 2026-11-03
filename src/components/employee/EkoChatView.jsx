@@ -277,6 +277,7 @@ export default function EkoChatView({
   } = useApp();
 
   const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [showSuggestedDraft, setShowSuggestedDraft] = useState(false);
   const messagesEndRef = useRef(null);
 
   const availableSessions = isManager ? MANAGER_CHAT_SESSIONS : MAYA_CHAT_SESSIONS;
@@ -649,13 +650,29 @@ export default function EkoChatView({
                   className={`p-4 sm:p-5 rounded-3xl max-w-[85%] leading-6 ${
                     isUser
                       ? 'bg-[#5455EE] text-white rounded-br-xs shadow-md font-normal'
+                      : msg.isTurn5
+                      ? 'bg-gradient-to-br from-[#F5F3FF] via-[#EEF0FF] to-[#FAF8FF] border-2 border-[#5455EE]/40 rounded-bl-xs shadow-md font-normal ring-2 ring-[#5455EE]/10'
                       : 'bg-white text-slate-800 border border-[#EBECEF] rounded-bl-xs shadow-card font-normal'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-4 mb-2 text-xs opacity-80">
-                    <span className="font-semibold text-[13px] leading-5">{senderDisplayName}</span>
+                    <span className="font-semibold text-[13px] leading-5 flex items-center gap-1.5">
+                      {senderDisplayName}
+                      {msg.isTurn5 && (
+                        <span className="px-2 py-0.5 rounded-full bg-[#5455EE] text-white text-[10px] font-bold shadow-2xs">
+                          Proactive Check-in
+                        </span>
+                      )}
+                    </span>
                     <span className="text-xs leading-[18px] font-normal">{msg.time}</span>
                   </div>
+
+                  {msg.isTurn5 && (
+                    <div className="mb-2 p-2 px-3 rounded-xl bg-white/80 border border-[#5455EE]/25 text-xs text-[#5455EE] font-semibold flex items-center gap-1.5">
+                      <Sparkles size={13} />
+                      <span>Workplace Pattern Detected: Task handoff friction</span>
+                    </div>
+                  )}
 
                   <p className="whitespace-pre-line text-base font-normal leading-6">
                     {msg.text}
@@ -708,52 +725,64 @@ export default function EkoChatView({
                             <tr className="bg-[#FFF9F2]">
                               <td className="p-3 font-normal text-[#9E4A1A] leading-5">Additional testing documentation</td>
                               <td className="p-3 text-[#9E4A1A] leading-5">Friday, 23 Oct</td>
-                              <td className="p-3 text-right font-semibold tabular-nums text-[#9E4A1A] leading-5">4 hours</td>
+                              <td className="p-3 text-right font-semibold tabular-nums text-[#9E4A1A] leading-5">+4h (Overload)</td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
 
-                      {/* Summary & Suggestions below table */}
-                      <span className="font-semibold flex items-center gap-1.5 text-indigo-950 text-sm leading-5">
-                        💡 Recommended Priority Order:
-                      </span>
-                      <div className="text-sm space-y-1.5 text-slate-800 leading-[22px]">
-                        <p>1. <strong className="font-semibold text-slate-900">Existing sprint tasks (Thursday)</strong> — take precedence to avoid blocking sprint delivery.</p>
-                        <p>2. <strong className="font-semibold text-slate-900">Client launch materials (Friday)</strong> — you scheduled client milestone for the week.</p>
-                        <p>3. <strong className="font-semibold text-slate-900">Additional testing documentation (Friday)</strong> — Defer / reassign: exceeds weekly capacity (+4h overload).</p>
-                      </div>
-
-                      <p className="text-sm font-normal text-slate-700 leading-[22px] pt-1">
-                        You should confirm this priority order with your manager (Daniel Lim) before deferring or declining the testing documentation so expectations are aligned.
-                      </p>
-
-                      <p className="text-sm font-medium leading-5 text-slate-900 pt-0.5">
-                        Need suggested draft message?
-                      </p>
-
-                      {/* Suggested Message Box (Non-italic per Section 6.6) */}
-                      <div className="p-4 rounded-2xl bg-[#F8F9FE] border border-[#5455EE]/25 flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium leading-5 text-[#5455EE]">Suggested draft message:</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard?.writeText(msg.suggestedDraft);
-                              setDraftCopied(true);
-                              if (onShowToast) onShowToast('Draft message copied to clipboard');
-                              setTimeout(() => setDraftCopied(false), 2500);
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                          >
-                            {draftCopied ? <Check size={13} /> : <Copy size={13} />}
-                            <span>{draftCopied ? 'Copied' : 'Copy'}</span>
-                          </button>
-                        </div>
-                        <p className="text-slate-800 text-sm font-normal leading-[22px]">
-                          “{msg.suggestedDraft}”
+                      {/* Condensed, non-repeating recommendations */}
+                      <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-col gap-1.5 text-sm text-slate-800 leading-relaxed">
+                        <span className="font-semibold text-[#5455EE] flex items-center gap-1.5">
+                          💡 Recommended Priority Order:
+                        </span>
+                        <p>
+                          1. <strong>Sprint Tasks & Client Launch (11h)</strong> — prioritize to avoid blocking release.
+                        </p>
+                        <p>
+                          2. <strong>Testing Documentation (+4h)</strong> — defer or ask Daniel Lim to reassign to avoid sprint overload.
                         </p>
                       </div>
+
+                      {/* Small Yes button beside 'Need suggested draft message?' */}
+                      <div className="flex items-center justify-between p-3 rounded-2xl bg-[#F8F9FE] border border-[#5455EE]/25">
+                        <span className="text-sm font-semibold text-slate-900">
+                          Need suggested draft message?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowSuggestedDraft(!showSuggestedDraft)}
+                          className="px-3 py-1 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>{showSuggestedDraft ? 'Hide' : 'Yes'}</span>
+                          <ArrowRight size={12} className={showSuggestedDraft ? 'rotate-90 transition-transform' : ''} />
+                        </button>
+                      </div>
+
+                      {/* Suggested Message Box - ONLY shows when user clicks 'Yes' */}
+                      {showSuggestedDraft && (
+                        <div className="p-4 rounded-2xl bg-white border border-[#5455EE]/40 flex flex-col gap-2.5 shadow-xs animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#5455EE]">Suggested Alignment Draft:</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard?.writeText(msg.suggestedDraft);
+                                setDraftCopied(true);
+                                if (onShowToast) onShowToast('Draft message copied to clipboard');
+                                setTimeout(() => setDraftCopied(false), 2500);
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                            >
+                              {draftCopied ? <Check size={13} /> : <Copy size={13} />}
+                              <span>{draftCopied ? 'Copied' : 'Copy'}</span>
+                            </button>
+                          </div>
+                          <p className="text-slate-800 text-sm font-normal leading-[22px]">
+                            “{msg.suggestedDraft}”
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 

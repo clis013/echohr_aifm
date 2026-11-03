@@ -366,128 +366,105 @@ export default function ActionModal({
                 </div>
               </div>
 
-              {/* Reporter Confidentiality & Anonymity Summary */}
-              <div className="p-4 rounded-2xl bg-[#F8F9FD] border border-slate-200 flex flex-col gap-2.5 shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <UserCheck size={16} className="text-[#5455EE]" />
-                    <span className="text-slate-900 font-semibold text-sm leading-5">
-                      Confidentiality & Reporter Protection Scope
-                    </span>
-                  </div>
-                  <span className="text-xs font-medium text-[#5455EE] uppercase tracking-wider bg-white px-2.5 py-0.5 rounded-md border border-[#5455EE]/20 shadow-2xs leading-[18px]">
-                    {item.anonymityType || (item.isAnonymous ? 'Anonymous Case' : 'Named Report')}
+              {/* Case Metadata & Confidentiality Strip */}
+              <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-[#EBECEF] flex-wrap shadow-2xs">
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="font-semibold text-slate-800 bg-[#F4F5FA] px-2.5 py-1 rounded-lg border border-slate-200">
+                    Dept: {item.department || 'Undisclosed'}
+                  </span>
+                  <span className="font-semibold text-[#5455EE] bg-[#EEF0FF] px-2.5 py-1 rounded-lg border border-[#5455EE]/20 flex items-center gap-1">
+                    <UserCheck size={12} />
+                    <span>{item.anonymityType || (item.isAnonymous ? 'Department-Level Anonymous' : 'Identity Disclosed')}</span>
+                  </span>
+                  <span className="text-slate-500 font-medium">
+                    Tenure: {item.tenure || 'Hidden'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-white p-3 rounded-xl border border-slate-200">
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Case ID</span>
-                    <strong className="text-slate-900 font-mono">
-                      {item.referenceCode || item.id}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Department</span>
-                    <strong className="text-slate-900">{item.department || 'Undisclosed'}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Privacy Level</span>
-                    <strong className="text-slate-900">
-                      {item.anonymityType === 'Full Anonymity'
-                        ? 'Fully Anonymous'
-                        : item.isAnonymous
-                        ? 'Department-Level'
-                        : 'Identity Disclosed'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Reporter Identity</span>
-                    <strong className="text-slate-900">
-                      {item.isAnonymous
-                        ? 'Hidden (Strictly Protected)'
-                        : item.reporterName || 'Disclosed'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">AI Chat Transcript</span>
-                    <strong className="text-slate-900">Not Attached (Confidential)</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Manager Disclosure</span>
-                    <strong className="text-slate-900">Zero Identifying Data Shared</strong>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="report-triage-status" className="text-xs font-semibold text-slate-600">
+                    Status:
+                  </label>
+                  <select
+                    id="report-triage-status"
+                    value={statusVal}
+                    onChange={(e) => setStatusVal(e.target.value)}
+                    className="px-2.5 py-1 bg-[#F8F9FD] border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-[#5455EE] cursor-pointer"
+                  >
+                    <option value="Action Required">Action Required</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Escalated">Escalated</option>
+                    <option value="Resolved">Resolved</option>
+                  </select>
                 </div>
+              </div>
 
-                <p className="text-xs font-normal leading-[18px] text-slate-600 bg-white/70 p-3 rounded-xl border border-slate-200">
-                  {item.anonymityType === 'Full Anonymity'
-                    ? 'The employee selected Full Anonymity. Department and tenure remain hidden from all management and review portals.'
-                    : item.isAnonymous
-                    ? 'The employee selected Department-Level privacy. HR can view that this concern originated within the department, but employee identity and private AI-chat transcripts are strictly hidden.'
-                    : 'The employee submitted a named report, allowing direct HR consultation while protecting team-facing anonymity.'}
+              {/* 1. Core Employee Concern Description */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-semibold text-slate-900 text-sm leading-5 flex items-center gap-1.5">
+                    <ShieldAlert size={16} className="text-rose-600" />
+                    <span>Reported Concern & Context</span>
+                  </h5>
+                  <span className="text-[11px] font-medium text-slate-400">
+                    Original Confidential Submission
+                  </span>
+                </div>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-[#F8F9FD] border border-slate-200 text-slate-800 leading-[22px] text-sm font-normal">
+                  {item.snippet || item.aiCaseSummary}
+                </div>
+              </div>
+
+              {/* 2. Target Positive Outcome / Desired Resolution */}
+              <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-col gap-1.5 shadow-2xs">
+                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800 leading-[18px]">
+                  Target Resolution & Expected Change
+                </span>
+                <p className="text-sm font-normal leading-[22px] text-emerald-950">
+                  {item.outcome || 'Rebalance sprint task allocations, establish explicit definition-of-done guidelines for senior-to-junior task handoffs, and clarify sprint priorities.'}
                 </p>
               </div>
 
-              {/* Employee Submission Content */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-1.5 shadow-2xs">
+              {/* 3. Corroborating Early Disengagement Signals */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col gap-2.5 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <h5 className="font-semibold text-slate-900 text-sm leading-5">
-                    Employee Concern Description
+                    Corroborating Disengagement Signals
                   </h5>
-                  <span className="text-[10px] font-semibold text-slate-400">
-                    Original Submission Content
-                  </span>
+                  <span className="text-xs text-slate-400 font-medium">3 Corroborated Channels</span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-[#F8F9FD] border border-slate-200 text-slate-800 leading-[22px] text-sm font-normal">
-                  {item.snippet}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200">
+                    <span className="text-slate-400 block text-[10px] font-medium uppercase">Eko AI Telemetry</span>
+                    <strong className="text-slate-800 font-medium">Task handoff friction queries</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200">
+                    <span className="text-slate-400 block text-[10px] font-medium uppercase">Community Board</span>
+                    <strong className="text-slate-800 font-medium">Post COM-1 (24 upvotes)</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200">
+                    <span className="text-slate-400 block text-[10px] font-medium uppercase">Operational Metrics</span>
+                    <strong className="text-rose-700 font-medium">+18% Overtime & 3 JIRO clashes</strong>
+                  </div>
                 </div>
               </div>
 
-              {/* Related Disengagement Signals */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-2">
-                <h5 className="font-semibold text-slate-900 text-sm leading-5">
-                  Related Early Disengagement Signals & Context
-                </h5>
-                <ul className="text-slate-700 space-y-2 text-sm font-normal leading-[22px]">
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>Recurring Eko conversation pattern detected over the past two weeks.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>
-                      Similar community post COM-1 with 24 upvotes on task refusal & competing
-                      deadlines.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>JIRO workload conflict and department overtime increased by 18%.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>Pulse-survey trend showing workload pressure & declining role clarity.</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Action Controls for Report */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col gap-2 shadow-2xs">
-                <span className="text-sm font-semibold text-slate-900 leading-5">Recommended Next Step</span>
-                <p className="text-sm font-normal text-slate-600 leading-[22px]">
-                  {item.suggestedAction ||
-                    'Investigate task allocation, route case to Head of Engineering, protect reporter identity.'}
-                </p>
-                <div className="pt-2 flex items-center justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowEscalationConfirm(true)}
-                    className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                  >
-                    <span>Escalate & Create Action Plan</span>
-                    <ArrowRight size={13} />
-                  </button>
+              {/* 4. Action Controls for Report */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Recommended Next Step</span>
+                  <p className="text-sm font-normal text-slate-800 leading-[22px] mt-0.5">
+                    {item.suggestedAction || 'Investigate task allocation, route case to Head of Engineering, protect reporter identity.'}
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEscalationConfirm(true)}
+                  className="px-4 py-2.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer flex-shrink-0"
+                >
+                  <span>Escalate & Create Action Plan</span>
+                  <ArrowRight size={14} />
+                </button>
               </div>
             </div>
           )}

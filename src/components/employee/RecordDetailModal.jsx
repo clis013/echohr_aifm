@@ -394,27 +394,27 @@ export default function RecordDetailModal({
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#F8F9FD] p-3.5 rounded-2xl border border-slate-200">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500">Workload</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Workload</span>
                       <strong className="text-sm font-extrabold text-[#5455EE]">
-                        {recordTarget.scores?.workload || 6} / 10
+                        {recordTarget.scores?.workload !== undefined ? `${recordTarget.scores.workload} / 5` : '3 / 5'}
                       </strong>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500">Clarity</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Clarity</span>
                       <strong className="text-sm font-extrabold text-[#5455EE]">
-                        {recordTarget.scores?.clarity || 6} / 10
+                        {recordTarget.scores?.clarity !== undefined ? `${recordTarget.scores.clarity} / 5` : '3 / 5'}
                       </strong>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500">Support</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Support</span>
                       <strong className="text-sm font-extrabold text-[#5455EE]">
-                        {recordTarget.scores?.support || 6} / 10
+                        {recordTarget.scores?.support !== undefined ? `${recordTarget.scores.support} / 5` : '3 / 5'}
                       </strong>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500">Help</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Help</span>
                       <strong className="text-sm font-extrabold text-[#5455EE]">
-                        {recordTarget.scores?.help || 6} / 10
+                        {recordTarget.scores?.help !== undefined ? `${recordTarget.scores.help} / 5` : '3 / 5'}
                       </strong>
                     </div>
                   </div>

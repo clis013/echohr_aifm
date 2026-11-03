@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle2, Check, ClipboardCheck, Sparkles } from 'lucide-react';
+import { X, CheckCircle2, Check, ClipboardCheck, Sparkles, Send } from 'lucide-react';
 import { MAYA_PROFILE } from '../../data/mockData';
 
 export default function PulseSurveyModal({
@@ -15,20 +15,47 @@ export default function PulseSurveyModal({
 }) {
   if (!isOpen) return null;
 
+  const questions = [
+    {
+      key: 'workload',
+      label: '1. How manageable has your workload felt this week?',
+      minLabel: 'Overloaded',
+      maxLabel: 'Manageable',
+    },
+    {
+      key: 'clarity',
+      label: '2. Do you have clear instructions and priority guidelines?',
+      minLabel: 'Very Unclear',
+      maxLabel: 'Crystal Clear',
+    },
+    {
+      key: 'support',
+      label: '3. How supported do you feel by your manager & peers?',
+      minLabel: 'No Support',
+      maxLabel: 'Fully Supported',
+    },
+    {
+      key: 'help',
+      label: '4. How comfortable are you reaching out when stuck?',
+      minLabel: 'Hesitant',
+      maxLabel: 'Comfortable',
+    },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-[#EBECEF] rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col gap-6 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white border border-[#EBECEF] rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col gap-4 max-w-2xl w-full animate-in zoom-in-95 duration-150">
         {pulseSubmittedSuccess ? (
-          <div className="flex flex-col items-center justify-center py-10 px-4 text-center gap-4 animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center border-2 border-emerald-200/80 shadow-md">
-              <CheckCircle2 size={36} className="text-emerald-500" />
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-3.5 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-xs">
+              <CheckCircle2 size={32} className="text-emerald-500" />
             </div>
-            <div className="flex flex-col gap-1.5 max-w-md">
-              <h3 className="text-xl font-extrabold text-slate-900">
-                Your Pulse Survey is Submitted!
+            <div className="flex flex-col gap-1 max-w-md">
+              <h3 className="text-xl font-bold text-slate-900">
+                Pulse Survey Recorded! ✨
               </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Thank you for checking in. Your weekly pulse scores and feedback have been securely recorded.
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Thank you for checking in. Your exact ratings have been saved and aggregated anonymously into team workload trends.
               </p>
             </div>
             <button
@@ -37,22 +64,28 @@ export default function PulseSurveyModal({
                 setPulseSubmittedSuccess(false);
                 onClose();
               }}
-              className="mt-3 px-6 py-2.5 bg-[#5455EE] hover:bg-[#4344dd] text-white font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+              className="mt-2 px-6 py-2.5 bg-[#5455EE] hover:bg-[#4344dd] text-white font-semibold text-sm rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
             >
-              <Check size={14} />
+              <Check size={15} />
               <span>Done</span>
             </button>
           </div>
         ) : (
           <>
+            {/* Header */}
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Occasional Pulse Survey
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  This helps EchoHR understand broader team trends. You can also use Eko anytime for immediate work support.
-                </p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs">
+                  <ClipboardCheck size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                    Weekly Pulse Check-in
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    100% anonymous · Takes 1 minute to reflect on your week
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -64,159 +97,102 @@ export default function PulseSurveyModal({
               </button>
             </div>
 
-            <form onSubmit={onSubmit} className="flex flex-col gap-6 text-xs">
-              {/* Question 1: Workload */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800">
-                    1. How manageable has your workload felt this week?
-                  </label>
-                  <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-[#5455EE] bg-[#EEF0FF]">
-                    {pulseResponses.workload ?? 0} / 10
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={pulseResponses.workload ?? 0}
-                  onChange={(e) =>
-                    setPulseResponses({ ...pulseResponses, workload: parseInt(e.target.value) })
-                  }
-                  className="w-full accent-[#5455EE] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>0 (Severe Overload)</span>
-                  <span>10 (Completely Manageable)</span>
-                </div>
+            {/* Form - Compact & larger text, strictly NO scrolling */}
+            <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {questions.map((q) => {
+                  const currentVal = pulseResponses[q.key] ?? 3;
+                  return (
+                    <div
+                      key={q.key}
+                      className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200/80 flex flex-col justify-between gap-2.5"
+                    >
+                      <label className="text-sm font-semibold text-slate-900 leading-snug">
+                        {q.label}
+                      </label>
+
+                      {/* 1-5 Scale Rating Buttons */}
+                      <div className="flex items-center justify-between gap-1.5">
+                        {[1, 2, 3, 4, 5].map((num) => {
+                          const isSelected = currentVal === num;
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() =>
+                                setPulseResponses({
+                                  ...pulseResponses,
+                                  [q.key]: num,
+                                })
+                              }
+                              className={`flex-1 py-1.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#5455EE] text-white shadow-xs scale-105 ring-2 ring-[#5455EE]/30'
+                                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium px-0.5">
+                        <span>1 ({q.minLabel})</span>
+                        <span>5 ({q.maxLabel})</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Question 2: Role Clarity */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800">
-                    2. Do you have clear instructions and priority guidelines for your tasks?
-                  </label>
-                  <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-[#5455EE] bg-[#EEF0FF]">
-                    {pulseResponses.clarity ?? 0} / 10
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={pulseResponses.clarity ?? 0}
-                  onChange={(e) =>
-                    setPulseResponses({ ...pulseResponses, clarity: parseInt(e.target.value) })
-                  }
-                  className="w-full accent-[#5455EE] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>0 (Very Unclear)</span>
-                  <span>10 (Crystal Clear)</span>
-                </div>
-              </div>
-
-              {/* Question 3: Support */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800">
-                    3. How supported do you feel by your manager and senior squad mates?
-                  </label>
-                  <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-[#5455EE] bg-[#EEF0FF]">
-                    {pulseResponses.support ?? 0} / 10
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={pulseResponses.support ?? 0}
-                  onChange={(e) =>
-                    setPulseResponses({ ...pulseResponses, support: parseInt(e.target.value) })
-                  }
-                  className="w-full accent-[#5455EE] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>0 (Isolated / No Support)</span>
-                  <span>10 (Fully Supported)</span>
-                </div>
-              </div>
-
-              {/* Question 4: Comfort asking for help */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-slate-800">
-                    4. How comfortable do you feel reaching out when you need help?
-                  </label>
-                  <span className="font-bold px-2 py-0.5 rounded-lg text-xs text-[#5455EE] bg-[#EEF0FF]">
-                    {pulseResponses.help ?? 0} / 10
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={pulseResponses.help ?? 0}
-                  onChange={(e) =>
-                    setPulseResponses({ ...pulseResponses, help: parseInt(e.target.value) })
-                  }
-                  className="w-full accent-[#5455EE] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>0 (Very Hesitant)</span>
-                  <span>10 (Completely Comfortable)</span>
-                </div>
-              </div>
-
-              {/* Optional Comment */}
-              <div className="flex flex-col gap-1.5">
-                <label className="font-bold text-slate-800">
-                  Any specific comments on this week's pace? (Optional)
+              {/* Optional Comment: Clean compact single/two line */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-700">
+                  Anything you'd like to highlight about this week's pace? (Optional)
                 </label>
-                <textarea
-                  rows={3}
+                <input
+                  type="text"
                   value={pulseComment}
                   onChange={(e) => setPulseComment(e.target.value)}
-                  placeholder="Share any thoughts or context about your workload this week..."
-                  className="w-full p-3 rounded-2xl border border-slate-200 text-xs text-slate-900 bg-[#F4F5FA] outline-none focus:border-[#5455EE]"
+                  placeholder="e.g. Blockers on Sprint 14 testing, need clearer brief on launch deliverables..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 bg-[#F8F9FD] focus:bg-white outline-none focus:border-[#5455EE] transition-all"
                 />
               </div>
 
               {/* Footer Actions */}
-              <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-slate-100 flex-wrap">
-                {/* Left Bottom Demo Autofill Button */}
+              <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setPulseResponses({
-                      workload: 6,
-                      clarity: 6,
-                      support: 6,
-                      help: 6,
+                      workload: 2,
+                      clarity: 2,
+                      support: 3,
+                      help: 3,
                     });
                     setPulseComment(MAYA_PROFILE.pulseComment);
                   }}
-                  className="px-3.5 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:scale-[1.01]"
-                  title="Fill demo values for Maya"
+                  className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border border-purple-200"
+                  title="Autofill sample pulse ratings"
                 >
-                  <Sparkles size={14} className="text-purple-600" />
-                  <span>Demo Autofill</span>
+                  <Sparkles size={13} />
+                  <span>Quick Sample Fill</span>
                 </button>
 
-                <div className="flex items-center gap-2.5 ml-auto">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#5455EE] hover:bg-[#4344dd] text-white font-extrabold text-xs rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                    className="px-5 py-2 bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
-                    <ClipboardCheck size={14} />
+                    <Send size={13} />
                     <span>Submit Pulse Survey</span>
                   </button>
                 </div>
