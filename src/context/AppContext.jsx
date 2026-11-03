@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import dataService from '../services/dataService';
+import {
+  COMPANY_POLICIES,
+  INITIAL_UNANSWERED_QUESTIONS,
+  INITIAL_KNOWLEDGE_FAQS,
+} from '../data/mockData';
 
 const AppContext = createContext(null);
 
@@ -15,6 +20,21 @@ export function AppProvider({ children }) {
   const [toastMessage, setToastMessage] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, data: null });
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+
+  // Ensure clean light mode
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('dark');
+      localStorage.removeItem('echohr_dark_mode');
+    }
+  }, []);
+
+  // Eko Chat History State
+  const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(false);
+  const [activeChatSessionId, setActiveChatSessionId] = useState('session_sprint');
+  const [newChatTrigger, setNewChatTrigger] = useState(0);
+  const [loadSessionTrigger, setLoadSessionTrigger] = useState(null);
+  const [pendingEkoQuestion, setPendingEkoQuestion] = useState(null);
 
   // Cross-role synchronization flags
   const [isAnnouncementPublished, setIsAnnouncementPublished] = useState(false);
@@ -38,6 +58,11 @@ export function AppProvider({ children }) {
   const [expandedConcernId, setExpandedConcernId] = useState(null);
   const [evidenceModalConcern, setEvidenceModalConcern] = useState(null);
 
+  // HR Company Resources & Knowledge Base State
+  const [companyPolicies, setCompanyPolicies] = useState(() => COMPANY_POLICIES);
+  const [unansweredQuestions, setUnansweredQuestions] = useState(() => INITIAL_UNANSWERED_QUESTIONS);
+  const [knowledgeFaqs, setKnowledgeFaqs] = useState(() => INITIAL_KNOWLEDGE_FAQS);
+
   // Toast Notification dispatcher
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
@@ -53,19 +78,16 @@ export function AppProvider({ children }) {
       if (activePage !== 'community') {
         setActivePage('emp_chat');
       }
-      showToast('Switched to Employee Portal (Maya)');
     } else if (role === 'manager') {
       if (activePage !== 'community' && !activePage.startsWith('emp_')) {
         setActivePage('manager_workspace');
       }
-      showToast('Switched to Manager Portal (Daniel Lim)');
     } else {
       if (activePage.startsWith('emp_') || activePage === 'manager_workspace') {
         setActivePage('dashboard');
       }
-      showToast('Switched to HR Portal (Sarah)');
     }
-  }, [activePage, showToast]);
+  }, [activePage]);
 
   // Department selector helper
   const handleDepartmentChange = useCallback((deptKey) => {
@@ -77,6 +99,26 @@ export function AppProvider({ children }) {
         : `Switched to ${deptInfo?.name || deptKey} Department`
     );
   }, [showToast]);
+
+  // Eko Chat History Actions
+  const startNewChat = useCallback(() => {
+    setActiveChatSessionId('new');
+    setNewChatTrigger(Date.now());
+    setIsChatHistoryOpen(false);
+    showToast('Started a new conversation with Eko');
+  }, [showToast]);
+
+  const loadChatSession = useCallback((session) => {
+    setActiveChatSessionId(session.id);
+    setLoadSessionTrigger(session);
+    setIsChatHistoryOpen(false);
+    showToast(`Loaded: ${session.title}`);
+  }, [showToast]);
+
+  const askEkoQuestion = useCallback((questionText) => {
+    setActivePage('emp_chat');
+    setPendingEkoQuestion(questionText);
+  }, []);
 
   // Modal interaction handlers
   const handleLaunchPlan = useCallback((item, category) => {
@@ -248,6 +290,78 @@ export function AppProvider({ children }) {
     showToast(`Navigated to Action Plan ${planId || 'AP-01'}`);
   }, [showToast]);
 
+  // HR Knowledge Base & Policy Management Handlers
+  const handleUpdatePolicy = useCallback((updatedPolicy) => {
+    setCompanyPolicies((prev) => {
+      const exists = prev.some((p) => p.id === updatedPolicy.id);
+      if (exists) {
+        return prev.map((p) => (p.id === updatedPolicy.id ? updatedPolicy : p));
+      }
+      return [updatedPolicy, ...prev];
+    });
+    showToast(`Policy ${updatedPolicy.id} updated and synced with Eko AI.`);
+  }, [showToast]);
+
+  const handleAnswerQuestion = useCallback((questionId, officialAnswer, linkedPolicyId) => {
+    let targetQuestionTitle = '';
+    setUnansweredQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id === questionId) {
+          targetQuestionTitle = q.question;
+          return {
+            ...q,
+            status: 'answered',
+            hrAnswer: officialAnswer,
+            answeredBy: 'Sarah Jenkins (Senior HR Partner)',
+            answeredDate: 'Just now',
+            linkedPolicyId: linkedPolicyId || q.linkedPolicyId || 'HR-POL-014',
+          };
+        }
+        return q;
+      })
+    );
+
+    // Auto-publish to verified knowledge FAQs for Eko
+    setKnowledgeFaqs((prev) => [
+      {
+        id: `KB-${Date.now().toString().slice(-4)}`,
+        question: targetQuestionTitle || 'Employee Query',
+        answer: officialAnswer,
+        category: 'workload',
+        policyId: linkedPolicyId || 'HR-POL-014',
+        lastUpdated: 'Just now',
+        verifiedBy: 'Sarah Jenkins (HR Partner)',
+      },
+      ...prev,
+    ]);
+
+    showToast('Official answer published to Eko AI Knowledge Base!');
+  }, [showToast]);
+
+  const handleSaveKnowledgeFaq = useCallback((faq) => {
+    setKnowledgeFaqs((prev) => {
+      const exists = prev.some((f) => f.id === faq.id);
+      if (exists) {
+        return prev.map((f) => (f.id === faq.id ? faq : f));
+      }
+      return [faq, ...prev];
+    });
+    showToast('Knowledge item saved & published to Eko AI.');
+  }, [showToast]);
+
+  const handleDeleteKnowledgeFaq = useCallback((faqId) => {
+    setKnowledgeFaqs((prev) => prev.filter((f) => f.id !== faqId));
+    showToast('Knowledge item removed from Eko reference.');
+  }, [showToast]);
+
+  // Action Plan updater for directly editing and tracking plans
+  const handleUpdateActionPlan = useCallback((updatedPlan) => {
+    setActionPlans((prev) =>
+      prev.map((p) => (p.id === updatedPlan.id ? { ...p, ...updatedPlan } : p))
+    );
+    showToast(`Action plan ${updatedPlan.id} changes saved successfully.`);
+  }, [showToast]);
+
   // Derived memoized data getters
   const currentDeptData = useMemo(() => {
     return dataService.getDepartmentData(department);
@@ -292,6 +406,19 @@ export function AppProvider({ children }) {
     isAiDrawerOpen,
     setIsAiDrawerOpen,
 
+    // Eko Chat History
+    isChatHistoryOpen,
+    setIsChatHistoryOpen,
+    activeChatSessionId,
+    setActiveChatSessionId,
+    newChatTrigger,
+    loadSessionTrigger,
+    pendingEkoQuestion,
+    setPendingEkoQuestion,
+    startNewChat,
+    loadChatSession,
+    askEkoQuestion,
+
     // Cross-role coordination
     isAnnouncementPublished,
     setIsAnnouncementPublished,
@@ -321,6 +448,19 @@ export function AppProvider({ children }) {
     handleSendReminder,
     handleNavigateToConcern,
     handleNavigateToActionPlan,
+    handleUpdateActionPlan,
+
+    // HR Company Resources & Knowledge Base
+    companyPolicies,
+    setCompanyPolicies,
+    unansweredQuestions,
+    setUnansweredQuestions,
+    knowledgeFaqs,
+    setKnowledgeFaqs,
+    handleUpdatePolicy,
+    handleAnswerQuestion,
+    handleSaveKnowledgeFaq,
+    handleDeleteKnowledgeFaq,
 
     // Data models
     currentDeptData,

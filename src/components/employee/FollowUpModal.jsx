@@ -37,7 +37,7 @@ export default function FollowUpModal({ isOpen, onClose }) {
             </thead>
             <tbody className="divide-y divide-[#EBECEF]">
               {MAYA_PROFILE.pulseHistory.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50">
+                <tr key={idx} className="hover:bg-slate-50">
                   <td className="p-3 font-semibold text-slate-800">{row.measure}</td>
                   <td className="p-3 text-right text-slate-600">{row.current} / 10</td>
                   <td className="p-3 text-right font-extrabold text-emerald-700 bg-emerald-50/40">

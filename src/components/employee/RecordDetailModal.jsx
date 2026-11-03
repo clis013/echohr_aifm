@@ -117,7 +117,7 @@ export default function RecordDetailModal({
                 />
               </button>
               {recordPrivacyOpen && (
-                <div className="p-3.5 pt-0 border-t border-slate-200/70 bg-white grid grid-cols-2 gap-2 text-xs text-slate-600 mt-2">
+                <div className="p-3.5 pt-0 border-t border-slate-200 bg-white grid grid-cols-2 gap-2 text-xs text-slate-600 mt-2">
                   <div>
                     Department:{' '}
                     <strong className="text-slate-800">

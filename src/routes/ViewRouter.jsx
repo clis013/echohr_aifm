@@ -9,6 +9,7 @@ import CommunityBoardView from '../components/community/CommunityBoardView';
 import EmployeePortalView from '../components/employee/EmployeePortalView';
 import ManagerActionWorkspace from '../components/manager/ManagerActionWorkspace';
 import ActionsFollowUpView from '../components/hr/ActionsFollowUpView';
+import HrKnowledgeBaseView from '../components/hr/HrKnowledgeBaseView';
 import dataService from '../services/dataService';
 
 export default function ViewRouter() {
@@ -38,6 +39,7 @@ export default function ViewRouter() {
     handleReviewReport,
     isAnnouncementPublished,
     setIsAnnouncementPublished,
+    expandedConcernId,
   } = useApp();
 
   return (
@@ -63,15 +65,15 @@ export default function ViewRouter() {
                   className="bg-transparent text-xs sm:text-sm font-bold text-slate-800 outline-none cursor-pointer pr-3 pt-0.5"
                   aria-label="Organizational and Department View"
                 >
-                  <optgroup label="Organization-wide View">
-                    <option value="all">All Departments (300)</option>
+                  <optgroup label="Organization-wide View" className="">
+                    <option value="all" className="">All Departments (300)</option>
                   </optgroup>
-                  <optgroup label="Department Views">
-                    <option value="engineering">Engineering (100)</option>
-                    <option value="product">Product (55)</option>
-                    <option value="sales">Sales & Marketing (65)</option>
-                    <option value="support">Customer Success (45)</option>
-                    <option value="operations">Operations (35)</option>
+                  <optgroup label="Department Views" className="">
+                    <option value="engineering" className="">Engineering (100)</option>
+                    <option value="product" className="">Product (55)</option>
+                    <option value="sales" className="">Sales & Marketing (65)</option>
+                    <option value="support" className="">Customer Success (45)</option>
+                    <option value="operations" className="">Operations (35)</option>
                   </optgroup>
                 </select>
               </div>
@@ -115,10 +117,20 @@ export default function ViewRouter() {
             isDepartmentView={department !== 'all'}
           />
 
-          {/* Main 2-Column Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 items-start">
-            {/* Left Column: Disengagement Concerns & Friction Themes Distribution */}
-            <div className="flex flex-col gap-6">
+          {/* Main Content Layout:
+              - Standard: 2-column grid [1.3fr_1fr] (concerns on left, reports on right).
+              - When a concern card is opened: PriorityConcerns stays in place and expands to the right (full width),
+                and ReportsFollowUp moves down after (below) the concern cards.
+          */}
+          <div
+            className={`transition-all duration-300 ${
+              expandedConcernId
+                ? 'flex flex-col gap-8 animate-in fade-in duration-200'
+                : 'grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 items-start'
+            }`}
+          >
+            {/* Priority Concerns (Pie Chart Donut + Concern Cards stay together, expanding full width) */}
+            <div className="flex flex-col gap-6 w-full">
               <PriorityConcerns
                 distribution={currentDeptData.distribution}
                 concerns={filteredConcerns}
@@ -139,15 +151,17 @@ export default function ViewRouter() {
                   navigateTo('reports');
                   showToast('Navigated to Feedback & Reports');
                 }}
+                isExpandedView={Boolean(expandedConcernId)}
               />
             </div>
 
-            {/* Right Column: Urgent Anonymous & Named Reports to Follow Up */}
-            <div className="sticky top-24">
+            {/* Reports to Follow Up: On the right side normally, moves down after concern cards when expanded */}
+            <div className={expandedConcernId ? 'w-full animate-in fade-in duration-200' : 'sticky top-24'}>
               <ReportsFollowUp
                 reports={filteredReports}
                 onSelectReport={handleReviewReport}
                 onGoToReportsPage={() => navigateTo('reports')}
+                isExpandedView={Boolean(expandedConcernId)}
               />
             </div>
           </div>
@@ -167,6 +181,11 @@ export default function ViewRouter() {
       {/* 5. HR PORTAL: PAGE 3 - ACTIONS & FOLLOW-UP VIEW */}
       {userRole === 'hr' && activePage === 'actions' && (
         <ActionsFollowUpView />
+      )}
+
+      {/* 5.1 HR PORTAL: PAGE 4 - COMPANY RESOURCES & KNOWLEDGE BASE */}
+      {userRole === 'hr' && activePage === 'hr_resources' && (
+        <HrKnowledgeBaseView />
       )}
 
       {/* 6. COMMUNITY BOARD VIEW (Shared across HR, Manager & Employee) */}

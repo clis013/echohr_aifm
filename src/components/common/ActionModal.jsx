@@ -138,7 +138,7 @@ export default function ActionModal({
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-[#EBECEF] flex items-center justify-between bg-white flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+            <h3 className="text-xl font-semibold leading-7 tracking-tight text-slate-900">
               {isCreateActionPlan
                 ? 'Create Action Plan'
                 : item?.concernTitle || `Review Report ${item?.id}`}
@@ -161,20 +161,20 @@ export default function ActionModal({
             <div className="space-y-4">
               {/* Concern: CON-01 & Burnout & Workload Imbalance */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1">
-                <span className="font-mono text-xs font-black px-2.5 py-0.5 rounded-md bg-[#5455EE] text-white inline-block">
+                <span className="font-mono text-xs font-medium tracking-wider px-2.5 py-0.5 rounded-md bg-[#5455EE] text-white inline-block leading-[18px]">
                   {item?.code || item?.id || 'CON-01'}
                 </span>
-                <h4 className="text-base sm:text-lg font-extrabold text-slate-900 mt-1">
+                <h4 className="text-base font-semibold leading-6 text-slate-900 mt-1">
                   {item?.title || 'Burnout & Workload Imbalance'}
                 </h4>
               </div>
 
               {/* Anonymized concern */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Anonymized concern
                 </span>
-                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+                <p className="text-sm font-normal leading-[22px] text-slate-800">
                   {item?.id === 'CON-01' || !item?.anonymizedSummary
                     ? 'New hires in Engineering may be receiving additional tasks without clear ownership or priority confirmation, creating workload and deadline conflicts.'
                     : item.anonymizedSummary}
@@ -183,13 +183,13 @@ export default function ActionModal({
 
               {/* Assign to */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Assign to
                 </span>
                 <select
                   value={actionOwner}
                   onChange={(e) => setActionOwner(e.target.value)}
-                  className="w-full bg-[#F8F9FD] border border-slate-200/90 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-[#5455EE] cursor-pointer"
+                  className="w-full bg-[#F8F9FD] border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-normal leading-5 text-slate-800 outline-none focus:border-[#5455EE] cursor-pointer"
                 >
                   <option value="Daniel Lim — Engineering Manager">
                     Daniel Lim — Engineering Manager
@@ -206,7 +206,7 @@ export default function ActionModal({
 
               {/* Suggested actions */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-2.5">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Suggested actions
                 </span>
                 <div className="space-y-2">
@@ -216,7 +216,7 @@ export default function ActionModal({
                       className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                         action.checked
                           ? 'bg-[#EEF0FF]/60 border-[#5455EE]/40 text-slate-900 shadow-2xs'
-                          : 'bg-white border-slate-200/90 text-slate-600 hover:bg-slate-50'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
                       <input
@@ -225,7 +225,7 @@ export default function ActionModal({
                         onChange={() => toggleSuggestedAction(action.id)}
                         className="mt-0.5 w-4 h-4 rounded text-[#5455EE] focus:ring-[#5455EE] border-slate-300 cursor-pointer accent-[#5455EE]"
                       />
-                      <span className="text-xs font-semibold leading-relaxed select-none">
+                      <span className="text-sm font-normal leading-[22px] text-slate-900 select-none">
                         {action.text}
                       </span>
                     </label>
@@ -237,29 +237,29 @@ export default function ActionModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Deadline */}
                 <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                     Deadline
                   </span>
-                  <div className="flex items-center gap-2 bg-[#F8F9FD] border border-slate-200/90 rounded-xl px-3 py-2">
+                  <div className="flex items-center gap-2 bg-[#F8F9FD] border border-slate-200 rounded-xl px-3 py-2">
                     <Calendar size={14} className="text-[#5455EE] flex-shrink-0" />
                     <input
                       type="text"
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
-                      className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none"
+                      className="w-full bg-transparent text-sm font-normal leading-5 text-slate-800 outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Priority */}
                 <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                     Priority
                   </span>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="w-full bg-rose-50 border border-rose-200 text-rose-700 font-extrabold rounded-xl px-3 py-2 text-xs outline-none focus:border-rose-400 cursor-pointer"
+                    className="w-full bg-rose-50 border border-rose-200 text-rose-700 font-medium rounded-xl px-3 py-2 text-sm leading-5 outline-none focus:border-rose-400 cursor-pointer"
                   >
                     <option value="High">High</option>
                     <option value="Medium">Medium</option>
@@ -270,10 +270,10 @@ export default function ActionModal({
 
               {/* Success measure */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Success measure
                 </span>
-                <p className="text-xs text-slate-800 leading-relaxed font-medium">
+                <p className="text-sm font-normal leading-[22px] text-slate-800">
                   Task owner and priority are confirmed before additional work is assigned.
                 </p>
               </div>
@@ -296,7 +296,7 @@ export default function ActionModal({
               </div>
 
               {/* Metadata Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#F8F9FD] p-3.5 rounded-2xl border border-slate-200/80">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#F8F9FD] p-3.5 rounded-2xl border border-slate-200">
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 uppercase block">
                     Linked Concern
@@ -329,30 +329,30 @@ export default function ActionModal({
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-100">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono font-bold text-xs bg-slate-900 text-white px-2.5 py-0.5 rounded-lg shadow-2xs">
+                    <span className="font-mono font-medium text-xs bg-slate-900 text-white px-2.5 py-0.5 rounded-lg shadow-2xs tracking-wider">
                       {item.id}
                     </span>
                     <span className="text-slate-300">•</span>
-                    <span className="font-semibold text-slate-700 text-xs bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
+                    <span className="font-medium text-slate-700 text-xs bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200 leading-[18px]">
                       {item.department || 'Undisclosed'}
                     </span>
                     <span className="text-slate-300">•</span>
-                    <span className="text-slate-500 text-xs">
+                    <span className="text-slate-500 text-xs leading-[18px]">
                       Tenure: <strong>{item.tenure || 'Hidden'}</strong>
                     </span>
                     <span className="text-slate-300">•</span>
-                    <span className="text-slate-500 text-xs">
+                    <span className="text-slate-500 text-xs leading-[18px]">
                       Submitted: <strong>{item.submissionDate || item.date}</strong>
                     </span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">
+                  <h4 className="text-base font-semibold leading-6 text-slate-900 mt-0.5">
                     {item.concernTitle}
                   </h4>
                 </div>
 
                 <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 flex-shrink-0">
                   <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    className={`text-xs font-medium px-3 py-1 rounded-full leading-[18px] ${
                       item.priority === 'High'
                         ? 'bg-rose-50 text-rose-700 border border-rose-200'
                         : 'bg-amber-50 text-amber-800 border border-amber-200'
@@ -360,27 +360,27 @@ export default function ActionModal({
                   >
                     {item.priority} Priority
                   </span>
-                  <span className="text-[11px] font-mono font-semibold text-slate-400">
+                  <span className="text-xs font-mono font-medium text-slate-500 tracking-wider leading-[18px]">
                     Ref: {item.referenceCode || 'ANON-4827'}
                   </span>
                 </div>
               </div>
 
               {/* Reporter Confidentiality & Anonymity Summary */}
-              <div className="p-4 rounded-2xl bg-[#F8F9FD] border border-slate-200/90 flex flex-col gap-2.5 shadow-2xs">
+              <div className="p-4 rounded-2xl bg-[#F8F9FD] border border-slate-200 flex flex-col gap-2.5 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <UserCheck size={16} className="text-[#5455EE]" />
-                    <span className="text-slate-900 font-extrabold text-xs">
+                    <span className="text-slate-900 font-semibold text-sm leading-5">
                       Confidentiality & Reporter Protection Scope
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold text-[#5455EE] uppercase tracking-wider bg-white px-2.5 py-0.5 rounded-md border border-[#5455EE]/20 shadow-2xs">
+                  <span className="text-xs font-medium text-[#5455EE] uppercase tracking-wider bg-white px-2.5 py-0.5 rounded-md border border-[#5455EE]/20 shadow-2xs leading-[18px]">
                     {item.anonymityType || (item.isAnonymous ? 'Anonymous Case' : 'Named Report')}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-white p-3 rounded-xl border border-slate-200/60">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-white p-3 rounded-xl border border-slate-200">
                   <div>
                     <span className="text-slate-400 text-[10px] block">Case ID</span>
                     <strong className="text-slate-900 font-mono">
@@ -419,7 +419,7 @@ export default function ActionModal({
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-600 leading-relaxed bg-white/70 p-2.5 rounded-xl border border-slate-200/40">
+                <p className="text-xs font-normal leading-[18px] text-slate-600 bg-white/70 p-3 rounded-xl border border-slate-200">
                   {item.anonymityType === 'Full Anonymity'
                     ? 'The employee selected Full Anonymity. Department and tenure remain hidden from all management and review portals.'
                     : item.isAnonymous
@@ -431,24 +431,24 @@ export default function ActionModal({
               {/* Employee Submission Content */}
               <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-1.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <h5 className="font-extrabold text-slate-900 text-xs">
+                  <h5 className="font-semibold text-slate-900 text-sm leading-5">
                     Employee Concern Description
                   </h5>
                   <span className="text-[10px] font-semibold text-slate-400">
                     Original Submission Content
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-[#F8F9FD] border border-slate-200/70 text-slate-800 leading-relaxed text-xs">
+                <div className="p-3.5 rounded-xl bg-[#F8F9FD] border border-slate-200 text-slate-800 leading-[22px] text-sm font-normal">
                   {item.snippet}
                 </div>
               </div>
 
               {/* Related Disengagement Signals */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex flex-col gap-2">
-                <h5 className="font-bold text-slate-900 text-xs">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-2">
+                <h5 className="font-semibold text-slate-900 text-sm leading-5">
                   Related Early Disengagement Signals & Context
                 </h5>
-                <ul className="text-slate-700 space-y-1.5 text-xs">
+                <ul className="text-slate-700 space-y-2 text-sm font-normal leading-[22px]">
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-600 font-bold">✓</span>
                     <span>Recurring Eko conversation pattern detected over the past two weeks.</span>
@@ -473,8 +473,8 @@ export default function ActionModal({
 
               {/* Action Controls for Report */}
               <div className="p-4 rounded-2xl bg-white border border-slate-200 flex flex-col gap-2 shadow-2xs">
-                <span className="text-xs font-bold text-slate-900">Recommended Next Step</span>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <span className="text-sm font-semibold text-slate-900 leading-5">Recommended Next Step</span>
+                <p className="text-sm font-normal text-slate-600 leading-[22px]">
                   {item.suggestedAction ||
                     'Investigate task allocation, route case to Head of Engineering, protect reporter identity.'}
                 </p>
@@ -482,7 +482,7 @@ export default function ActionModal({
                   <button
                     type="button"
                     onClick={() => setShowEscalationConfirm(true)}
-                    className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                   >
                     <span>Escalate & Create Action Plan</span>
                     <ArrowRight size={13} />
@@ -499,14 +499,14 @@ export default function ActionModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleCreateAndAssignActionPlan}
-              className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 group"
+              className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm leading-5 shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 group"
             >
               <Sparkles size={14} className="text-[#A5B4FC]" />
               <span>Create & Assign Plan</span>
@@ -529,7 +529,7 @@ export default function ActionModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 border border-slate-200 bg-white transition-colors cursor-pointer shadow-2xs"
+                className="px-4 py-2.5 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 border border-slate-200 bg-white transition-colors cursor-pointer shadow-2xs"
               >
                 Close
               </button>
@@ -537,7 +537,7 @@ export default function ActionModal({
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="px-6 py-2.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-extrabold transition-all shadow-md shadow-[#5455EE]/25 flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 transition-all shadow-md shadow-[#5455EE]/25 flex items-center gap-2 cursor-pointer"
                 >
                   <Check size={14} />
                   <span>Save Status & Changes</span>
@@ -566,16 +566,16 @@ export default function ActionModal({
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <h4 className="text-base font-extrabold text-slate-900">
+                <h4 className="text-xl font-semibold leading-7 text-slate-900">
                   Escalate confidential report?
                 </h4>
-                <p className="text-slate-500 text-[11px] mt-0.5">
+                <p className="text-slate-500 text-xs font-normal leading-[18px] mt-0.5">
                   Reference: {item.referenceCode || item.id}
                 </p>
               </div>
             </div>
 
-            <p className="text-slate-700 leading-relaxed text-xs">
+            <p className="text-slate-700 leading-[22px] text-sm font-normal">
               This report concerns workload allocation and managerial communication. It will be
               routed to Action Plan AP-01 for Engineering, assigning anonymized corrective actions to
               manager Daniel Lim.
@@ -591,14 +591,14 @@ export default function ActionModal({
               <button
                 type="button"
                 onClick={() => setShowEscalationConfirm(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmEscalation}
-                className="px-5 py-2.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-xs font-extrabold transition-all shadow-md shadow-[#5455EE]/25 cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 transition-all shadow-md shadow-[#5455EE]/25 cursor-pointer flex items-center gap-1.5"
               >
                 <CheckCircle2 size={14} />
                 <span>Confirm Escalation</span>

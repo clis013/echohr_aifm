@@ -143,15 +143,15 @@ export default function DonutChart({
                 x={center}
                 y={center - 1}
                 textAnchor="middle"
-                className="text-2xl font-extrabold fill-slate-900"
+                className="text-[28px] font-semibold fill-slate-900 leading-9 tabular-nums"
               >
                 {hoveredCatId && activeItemObj ? `${activeItemObj.percentage}%` : activeThemesCount}
               </text>
               <text
                 x={center}
-                y={center + 14}
+                y={center + 15}
                 textAnchor="middle"
-                className="text-[9px] font-bold fill-slate-400 uppercase tracking-wider"
+                className="text-xs font-normal fill-slate-500 leading-[18px]"
               >
                 {hoveredCatId && activeCategoryObj ? activeCategoryObj.name : 'Concerns'}
               </text>
@@ -191,12 +191,12 @@ export default function DonutChart({
                       className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-xs"
                       style={{ backgroundColor: cat.color }}
                     />
-                    <span className="text-xs font-bold text-slate-800 leading-tight">
+                    <span className="text-[13px] font-normal text-slate-700 leading-5">
                       {cat.name}
                     </span>
                   </div>
 
-                  <span className="text-xs font-extrabold text-slate-800 bg-[#F4F5FA] px-2 py-0.5 rounded-lg border border-[#EBECEF] ml-2 flex-shrink-0">
+                  <span className="text-[13px] font-medium tabular-nums text-slate-800 bg-[#F4F5FA] px-2 py-0.5 rounded-lg border border-[#EBECEF] ml-2 flex-shrink-0 leading-5">
                     {item.percentage}%
                   </span>
                 </div>
@@ -216,8 +216,8 @@ export default function DonutChart({
           }}
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-white">{tooltip.cat.name}</span>
-            <span className="text-xs font-extrabold text-sky-400">{tooltip.item.percentage}%</span>
+            <span className="text-[13px] font-medium text-white leading-5">{tooltip.cat.name}</span>
+            <span className="text-[13px] font-semibold tabular-nums text-sky-400 leading-5">{tooltip.item.percentage}%</span>
           </div>
           <p className="text-[11px] text-slate-300 leading-snug">{tooltip.cat.description}</p>
         </div>

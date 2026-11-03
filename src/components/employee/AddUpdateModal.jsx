@@ -30,7 +30,7 @@ export default function AddUpdateModal({
           </button>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600">
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
           <span className="font-bold text-slate-800 block mb-0.5">Existing Case:</span>
           <p className="line-clamp-2">{updateRecordTarget.title}</p>
         </div>

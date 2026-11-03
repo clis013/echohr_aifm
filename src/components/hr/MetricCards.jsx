@@ -134,7 +134,7 @@ export default function MetricCards({
                   <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center flex-shrink-0 shadow-inner">
                     <Icon size={18} strokeWidth={2.2} />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-white tracking-tight">
+                  <span className="text-sm font-medium leading-5 text-white tracking-normal">
                     {c.title}
                   </span>
                 </div>
@@ -144,15 +144,15 @@ export default function MetricCards({
               </div>
 
               <div className="flex items-center gap-2.5 my-2 relative z-10">
-                <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none">
+                <span className="text-2xl sm:text-[30px] font-semibold text-white tracking-tight leading-9 tabular-nums">
                   {c.value}
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg bg-white/20 text-white flex items-center gap-1">
+                <span className="text-xs font-medium leading-[18px] px-2 py-0.5 rounded-lg bg-white/20 text-white flex items-center gap-1">
                   <span>{c.trend}</span>
                 </span>
               </div>
 
-              <div className="text-[11px] font-medium text-white/80 relative z-10">
+              <div className="text-xs font-normal leading-[18px] text-white/80 relative z-10">
                 {c.status}
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function MetricCards({
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${c.iconBox}`}>
                   <Icon size={18} strokeWidth={2.2} />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-700 tracking-tight">
+                <span className="text-sm font-medium leading-5 text-slate-700 tracking-normal">
                   {c.title}
                 </span>
               </div>
@@ -191,15 +191,15 @@ export default function MetricCards({
             </div>
 
             <div className="flex items-center gap-2.5 my-2 relative z-10">
-              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
+              <span className="text-2xl sm:text-[30px] font-semibold text-slate-900 tracking-tight leading-9 tabular-nums">
                 {c.value}
               </span>
-              <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg ${c.trendClass}`}>
+              <span className={`text-xs font-medium leading-[18px] px-2 py-0.5 rounded-lg ${c.trendClass}`}>
                 {c.trend}
               </span>
             </div>
 
-            <div className="text-[11px] font-medium text-slate-400 relative z-10">
+            <div className="text-xs font-normal leading-[18px] text-slate-500 relative z-10">
               {c.status}
             </div>
           </div>

@@ -71,7 +71,7 @@ export default function AnonymousStatusModal({
               {statusResult.response}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-200/70 pt-2">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-200 pt-2">
               <span>Last updated: {statusResult.lastUpdated}</span>
               <span>Next progress review: {statusResult.nextUpdate}</span>
             </div>

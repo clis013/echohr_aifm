@@ -25,6 +25,7 @@ import {
   Users2,
   Lock,
   MessageSquareHeart,
+  Search,
 } from 'lucide-react';
 import EchoLogo from '../common/EchoLogo';
 
@@ -42,6 +43,7 @@ export default function CommunityBoardView({
   const [announcement, setAnnouncement] = useState(OFFICIAL_ANNOUNCEMENT);
   const [activeTab, setActiveTab] = useState('discussions'); // 'discussions' | 'announcements'
   const [selectedTag, setSelectedTag] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedReplies, setExpandedReplies] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
   const [showEkoPrompt, setShowEkoPrompt] = useState(false);
@@ -208,16 +210,33 @@ export default function CommunityBoardView({
     if (onNewPost) onNewPost();
   };
 
-  // Filter posts by tag
+  // Filter posts by tag and search query
   const filteredPosts = useMemo(() => {
-    if (selectedTag === 'all') return posts;
-    return posts.filter(
-      (p) =>
-        p.tag === selectedTag ||
-        p.categoryKey === selectedTag ||
-        (selectedTag === 'con_01' && p.tag?.includes('Workload'))
-    );
-  }, [posts, selectedTag]);
+    let result = posts;
+    if (selectedTag !== 'all') {
+      result = result.filter(
+        (p) =>
+          p.tag === selectedTag ||
+          p.categoryKey === selectedTag ||
+          (selectedTag === 'con_01' && p.tag?.includes('Workload')) ||
+          (selectedTag.includes('Workload') && p.tag?.includes('Workload')) ||
+          (selectedTag.includes('Manager') && p.tag?.includes('Manager')) ||
+          (selectedTag.includes('Recognition') && p.tag?.includes('Recognition')) ||
+          (selectedTag.includes('Collaboration') && p.tag?.includes('Collaboration'))
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(q) ||
+          p.content?.toLowerCase().includes(q) ||
+          p.tag?.toLowerCase().includes(q) ||
+          p.id?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [posts, selectedTag, searchQuery]);
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -227,26 +246,26 @@ export default function CommunityBoardView({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_330px] xl:grid-cols-[1fr_360px] gap-6 items-start w-full">
         {/* LEFT COLUMN: Main Feed, Tabs, and Posts */}
         <div className="flex flex-col gap-5 w-full">
-          {/* TABS & FILTERS BAR */}
+          {/* TABS & SEARCH BAR (Search beside Company Announcements button) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EBECEF] pb-3">
-            {/* Tab switchers */}
-            <div className="flex items-center gap-2">
+            {/* Tab switchers + Search bar directly beside Company Announcement tab button */}
+            <div className="flex items-center gap-2 flex-1 flex-wrap sm:flex-nowrap">
               <button
                 type="button"
                 onClick={() => setActiveTab('discussions')}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'discussions'
+                className={`px-4 py-2.5 rounded-2xl text-sm font-medium leading-5 transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${activeTab === 'discussions'
                   ? 'bg-[#5455EE] text-white shadow-xs'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-[#EBECEF]'
                   }`}
               >
                 <MessageSquare size={14} />
-                <span>Discussions ({posts.length})</span>
+                <span>Discussions ({filteredPosts.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('announcements')}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 relative ${activeTab === 'announcements'
+                className={`px-4 py-2.5 rounded-2xl text-sm font-medium leading-5 transition-all cursor-pointer flex items-center gap-2 relative whitespace-nowrap ${activeTab === 'announcements'
                   ? 'bg-[#5455EE] text-white shadow-xs'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-[#EBECEF]'
                   }`}
@@ -254,40 +273,38 @@ export default function CommunityBoardView({
                 <Megaphone size={14} />
                 <span>Company Announcements</span>
                 {isPublished ? (
-                  <span className="text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full shadow-2xs">
+                  <span className="text-xs font-medium text-white bg-emerald-500 px-2 py-0.5 rounded-full shadow-2xs">
                     1 New
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                  <span className="text-xs font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">
                     0
                   </span>
                 )}
               </button>
-            </div>
 
-            {/* Quick Topic Filter Pills */}
-            {activeTab === 'discussions' && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'Workload & Role Clarity', label: '🔥 Workload' },
-                  { id: 'Manager Support & Guidance', label: '💡 Managers' },
-                  { id: 'Recognition & Career Growth', label: '🌱 Growth' },
-                  { id: 'Collaboration & Change', label: '🤝 Team' },
-                ].map((tag) => (
+              {/* Search input beside Company Announcements button */}
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search discussions or announcements..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-[#EBECEF] focus:border-[#5455EE] rounded-2xl pl-9 pr-8 py-2 text-sm font-normal text-slate-800 placeholder-slate-400 outline-none transition-all shadow-2xs"
+                />
+                {searchQuery && (
                   <button
-                    key={tag.id}
-                    onClick={() => setSelectedTag(tag.id)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${selectedTag === tag.id
-                      ? 'bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/40 shadow-2xs'
-                      : 'bg-white text-slate-500 hover:text-slate-800 border border-[#EBECEF]'
-                      }`}
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    title="Clear search"
                   >
-                    {tag.label}
+                    <X size={13} />
                   </button>
-                ))}
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* TAB 1: COMMUNITY DISCUSSIONS */}
@@ -371,6 +388,32 @@ export default function CommunityBoardView({
                 </div>
               </div>
 
+              {filteredPosts.length === 0 && (
+                <div className="bg-white border border-[#EBECEF] rounded-3xl p-10 text-center flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center">
+                    <Search size={22} />
+                  </div>
+                  <h4 className="text-base font-bold text-slate-800">No discussions found</h4>
+                  <p className="text-xs text-slate-500 max-w-sm">
+                    {searchQuery
+                      ? `No peer posts matched "${searchQuery}". Try a different keyword or clear your filters.`
+                      : 'No posts in this topic yet. Be the first to start a conversation!'}
+                  </p>
+                  {(searchQuery || selectedTag !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedTag('all');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-[#5455EE] text-white text-xs font-bold hover:bg-[#4344dd] transition-all cursor-pointer"
+                    >
+                      Clear Search & Filters
+                    </button>
+                  )}
+                </div>
+              )}
+
               {filteredPosts.map((post) => {
                 const isRepliesOpen = expandedReplies[post.id];
                 const replyCount = post.replies?.length || post.comments || 0;
@@ -400,17 +443,17 @@ export default function CommunityBoardView({
                     {/* Header: Author, Badge, Time, and Tag */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E4FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs border border-[#5455EE]/20 font-bold text-xs">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#EEF0FF] to-[#E0E4FF] text-[#5455EE] flex items-center justify-center flex-shrink-0 shadow-2xs border border-[#5455EE]/20 font-medium text-sm">
                           <User size={18} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-extrabold text-slate-900">{post.author}</span>
-                            <span className="text-[10px] font-bold text-[#5455EE] bg-[#EEF0FF] px-2 py-0.5 rounded-md border border-[#5455EE]/20">
+                            <span className="text-[13px] font-semibold leading-5 text-slate-900">{post.author}</span>
+                            <span className="text-xs font-medium leading-[18px] text-[#5455EE] bg-[#EEF0FF] px-2 py-0.5 rounded-md border border-[#5455EE]/20">
                               Anonymous Peer
                             </span>
                           </div>
-                          <span className="text-[11px] text-slate-400 mt-0.5 block">
+                          <span className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5 block">
                             Posted {post.time}
                           </span>
                         </div>
@@ -418,7 +461,7 @@ export default function CommunityBoardView({
 
                       {post.tag && (
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${tagColorClass}`}
+                          className={`text-xs font-medium leading-[18px] px-2.5 py-1 rounded-full border ${tagColorClass}`}
                         >
                           {post.tag}
                         </span>
@@ -427,10 +470,10 @@ export default function CommunityBoardView({
 
                     {/* Post Content */}
                     <div className="flex flex-col gap-2">
-                      <h3 className="text-base font-extrabold text-slate-900 leading-snug group-hover:text-[#5455EE] transition-colors">
+                      <h3 className="text-lg font-semibold text-slate-900 leading-[26px] group-hover:text-[#5455EE] transition-colors">
                         {post.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                      <p className="text-base font-normal text-slate-700 leading-6 whitespace-pre-line">
                         {post.content}
                       </p>
                     </div>
@@ -440,57 +483,57 @@ export default function CommunityBoardView({
                       <button
                         type="button"
                         onClick={() => handleReaction(post.id, 'relatable')}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-relatable`]
+                        className={`px-2.5 py-1 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-relatable`]
                           ? 'bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/30 shadow-2xs'
                           : 'bg-[#F8F9FD] text-slate-600 hover:bg-slate-100 border border-slate-200'
                           }`}
                       >
                         <span>👍</span>
                         <span>Relatable</span>
-                        <span className="opacity-75">{postReactions.relatable}</span>
+                        <span className="opacity-75 tabular-nums">{postReactions.relatable}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleReaction(post.id, 'beenThere')}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-beenThere`]
+                        className={`px-2.5 py-1 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-beenThere`]
                           ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs'
                           : 'bg-[#F8F9FD] text-slate-600 hover:bg-slate-100 border border-slate-200'
                           }`}
                       >
                         <span>🙋</span>
                         <span>Been there</span>
-                        <span className="opacity-75">{postReactions.beenThere}</span>
+                        <span className="opacity-75 tabular-nums">{postReactions.beenThere}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleReaction(post.id, 'support')}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-support`]
+                        className={`px-2.5 py-1 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer flex items-center gap-1.5 ${userReacted[`${post.id}-support`]
                           ? 'bg-rose-50 text-rose-700 border border-rose-300 shadow-2xs'
                           : 'bg-[#F8F9FD] text-slate-600 hover:bg-slate-100 border border-slate-200'
                           }`}
                       >
                         <span>❤️</span>
                         <span>Support</span>
-                        <span className="opacity-75">{postReactions.support}</span>
+                        <span className="opacity-75 tabular-nums">{postReactions.support}</span>
                       </button>
                     </div>
 
                     {/* Actions Bar: Upvote & Reply toggle */}
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-sm">
                       <div className="flex items-center gap-2.5">
                         <button
                           type="button"
                           onClick={() => handleUpvote(post.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${post.userUpvoted
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer ${post.userUpvoted
                             ? 'bg-[#5455EE] text-white shadow-xs'
                             : 'bg-[#F4F5FA] text-slate-700 hover:bg-[#EEF0FF] hover:text-[#5455EE] border border-[#EBECEF]'
                             }`}
                           title="Upvote this discussion"
                         >
                           <ThumbsUp size={14} className={post.userUpvoted ? 'fill-current' : ''} />
-                          <span>{post.upvotes} Upvotes</span>
+                          <span className="tabular-nums">{post.upvotes} Upvotes</span>
                         </button>
 
                         <button
@@ -563,7 +606,7 @@ export default function CommunityBoardView({
                               setShowEkoPrompt(false);
                               setEkoPromptPostId(null);
                             }}
-                            className="px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100/60 transition-colors cursor-pointer"
+                            className="px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             Dismiss
                           </button>
@@ -601,7 +644,7 @@ export default function CommunityBoardView({
                             e.preventDefault();
                             handleAddComment(post.id);
                           }}
-                          className="flex items-center gap-2 pt-2 border-t border-slate-200/60"
+                          className="flex items-center gap-2 pt-2 border-t border-slate-200"
                         >
                           <input
                             type="text"
@@ -713,7 +756,7 @@ export default function CommunityBoardView({
                       {announcement.title}
                     </h4>
                     <div className="mt-3 flex flex-col gap-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
-                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
                         👋 <strong>Hello team!</strong> Thank you to everyone who participated in recent pulse check-ins and shared honest experiences in our Community Board. We heard your feedback on workload friction, unclear sprint priorities, and informal task handoffs.
                       </div>
 
@@ -790,8 +833,58 @@ export default function CommunityBoardView({
           )}
         </div>
 
-        {/* RIGHT COLUMN: Community Intelligence Rail (Privacy Notice, Trending Topics, Safety Guidelines) */}
+        {/* RIGHT COLUMN: Community Intelligence Rail (Topic Filters, Privacy Notice, Trending Topics, Safety Guidelines) */}
         <div className="flex flex-col gap-5 w-full">
+          {/* Topic Filters Tag Box placed directly above Community Safety & Privacy */}
+          <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 shadow-card flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center">
+                  <Filter size={13} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold leading-5 text-slate-900">Topic Filters</h4>
+                  <span className="text-xs font-normal leading-[18px] text-slate-500">Filter peer discussions</span>
+                </div>
+              </div>
+              {selectedTag !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedTag('all')}
+                  className="text-xs font-medium leading-[18px] text-[#5455EE] hover:underline cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'Workload & Role Clarity', label: '🔥 Workload' },
+                { id: 'Manager Support & Guidance', label: '💡 Managers' },
+                { id: 'Recognition & Career Growth', label: '🌱 Growth' },
+                { id: 'Collaboration & Change', label: '🤝 Team' },
+              ].map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTag(tag.id);
+                    setActiveTab('discussions');
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    selectedTag === tag.id
+                      ? 'bg-[#5455EE] text-white shadow-2xs'
+                      : 'bg-[#F8F9FD] text-slate-600 hover:text-slate-900 border border-[#EBECEF] hover:border-[#5455EE]/30'
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 1. SEAMLESS PRIVACY & SAFETY RULES CARD (Fulfills Item 3: perfectly fitted in right rail) */}
           <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 shadow-card flex flex-col gap-3.5">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
@@ -799,30 +892,30 @@ export default function CommunityBoardView({
                 <ShieldCheck size={16} />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">Community Safety & Privacy</h4>
-                <span className="text-[10px] text-slate-400">Psychologically safe peer space</span>
+                <h4 className="text-sm font-semibold leading-5 text-slate-900">Community Safety & Privacy</h4>
+                <span className="text-xs font-normal leading-[18px] text-slate-500">Psychologically safe peer space</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2.5 text-xs text-slate-600">
+            <div className="flex flex-col gap-2.5 text-sm text-slate-600">
               <div className="flex items-start gap-2">
-                <Lock size={13} className="text-[#5455EE] flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  <strong>100% Anonymity:</strong> Names, employee IDs, and departments are stripped before publication.
+                <Lock size={15} className="text-[#5455EE] flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-[22px] font-normal">
+                  <strong className="font-medium text-slate-800">100% Anonymity:</strong> Names, employee IDs, and departments are stripped before publication.
                 </p>
               </div>
 
               <div className="flex items-start gap-2">
-                <Info size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  <strong>Constructive & Respectful:</strong> Focus on workload and process barriers. Do not post names or identifying peer details.
+                <Info size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-[22px] font-normal">
+                  <strong className="font-medium text-slate-800">Constructive & Respectful:</strong> Focus on workload and process barriers. Do not post names or identifying peer details.
                 </p>
               </div>
 
               <div className="flex items-start gap-2">
-                <Compass size={13} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  <strong>Need Urgent Support?</strong> For individual grievances, submit a confidential report directly to HR.
+                <Compass size={15} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-[22px] font-normal">
+                  <strong className="font-medium text-slate-800">Need Urgent Support?</strong> For individual grievances, submit a confidential report directly to HR.
                 </p>
               </div>
             </div>
@@ -831,10 +924,10 @@ export default function CommunityBoardView({
               <button
                 type="button"
                 onClick={onNavigateToFeedback}
-                className="mt-1 w-full py-2 px-3 rounded-xl bg-[#F8F9FD] hover:bg-[#EEF0FF] border border-[#EBECEF] hover:border-[#5455EE]/30 text-[#5455EE] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="mt-1 w-full py-2 px-3 rounded-xl bg-[#F8F9FD] hover:bg-[#EEF0FF] border border-[#EBECEF] hover:border-[#5455EE]/30 text-[#5455EE] text-sm font-medium leading-5 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Confidential Reporting</span>
-                <ArrowRight size={12} />
+                <ArrowRight size={14} />
               </button>
             )}
           </div>

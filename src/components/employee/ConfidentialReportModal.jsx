@@ -116,7 +116,7 @@ export default function ConfidentialReportModal({
             </button>
 
             {privacyDropdownOpen && (
-              <div className="p-4 pt-2 border-t border-slate-200/70 bg-white flex flex-col gap-3">
+              <div className="p-4 pt-2 border-t border-slate-200 bg-white flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-slate-700">Visibility Level:</label>
                   <select

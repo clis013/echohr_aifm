@@ -233,23 +233,23 @@ export default function EvidenceModal({
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                   {concern.code || concern.id}
                 </span>
-                <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md leading-[18px]">
                   {concern.title}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-300 leading-[18px]">
                   {concern.priority} Priority
                 </span>
               </div>
               <h3
                 id="evidence-modal-title"
-                className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-snug"
+                className="text-xl font-semibold leading-7 tracking-tight text-slate-900"
               >
                 Detailed Evidence & Signals — {concern.code || concern.id}
               </h3>
-              <p className="text-xs text-slate-600 font-medium mt-0.5">
+              <p className="text-sm font-normal leading-[22px] text-slate-600 mt-1">
                 {concern.description || cat?.description || concern.title}
               </p>
             </div>
@@ -275,49 +275,49 @@ export default function EvidenceModal({
                 <div className="w-6 h-6 rounded-lg bg-[#5455EE] text-white flex items-center justify-center flex-shrink-0">
                   <ClipboardCheck size={14} />
                 </div>
-                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                <h4 className="text-sm font-semibold leading-5 text-slate-900 uppercase tracking-wide">
                   Pulse Survey Signals
                 </h4>
               </div>
-              <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-medium leading-[18px] text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
                 {effectiveDeptName} Cohort
               </span>
             </div>
 
             {/* Structured Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200/80 flex flex-col">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200 flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                   Repeated responses
                 </span>
-                <span className="text-lg font-black text-slate-900 mt-0.5">
+                <span className="text-xl font-semibold leading-7 tabular-nums text-slate-900 mt-0.5">
                   {pulseMetrics.repeatedResponses}
                 </span>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200/80 flex flex-col">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200 flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                   Priority clarity rate
                 </span>
                 <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-lg font-black text-rose-600">
+                  <span className="text-xl font-semibold leading-7 tabular-nums text-rose-600">
                     {pulseMetrics.clarityRate}
                   </span>
-                  <span className="text-[10px] font-bold text-rose-600">
+                  <span className="text-xs font-medium text-rose-600 leading-[18px]">
                     ({pulseMetrics.trend})
                   </span>
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200/80 col-span-2 sm:col-span-1 flex flex-col">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              <div className="p-2.5 rounded-xl bg-[#F8F9FD] border border-slate-200 col-span-2 sm:col-span-1 flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                   Department cohort
                 </span>
-                <span className="text-xs font-bold text-[#5455EE] mt-1.5 truncate">
+                <span className="text-sm font-medium text-[#5455EE] mt-1.5 truncate leading-5">
                   {effectiveDeptName}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+            <p className="text-sm font-normal leading-[22px] text-slate-700">
               {pulseMetrics.pulseText}
             </p>
 
@@ -326,14 +326,14 @@ export default function EvidenceModal({
               <button
                 type="button"
                 onClick={handleGoToPulseSurveys}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EEF0FF] hover:bg-[#5455EE] text-[#5455EE] hover:text-white text-xs font-bold transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#EEF0FF] hover:bg-[#5455EE] text-[#5455EE] hover:text-white text-sm font-medium leading-5 transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
                 title={`See all pulse surveys for ${effectiveDeptName}`}
               >
                 <ClipboardCheck size={13} />
                 <span>View pulse surveys(engineering)</span>
                 <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
-              <span className="text-[10px] text-slate-400 italic">
+              <span className="text-xs font-normal leading-[18px] text-slate-500">
                 *Aggregated data · Anonymity threshold (≥ 5 responses) met
               </span>
             </div>
@@ -346,16 +346,16 @@ export default function EvidenceModal({
                 <div className="w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center flex-shrink-0">
                   <MessageSquare size={14} />
                 </div>
-                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                <h4 className="text-sm font-semibold leading-5 text-slate-900 uppercase tracking-wide">
                   Feedback & Reports
                 </h4>
               </div>
-              <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-medium leading-[18px] text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
                 Active Submissions
               </span>
             </div>
 
-            <p className="text-xs text-slate-800 leading-relaxed font-semibold">
+            <p className="text-sm font-medium leading-[22px] text-slate-800">
               {evidence.feedbackCountSummary || voluntarySummary}
             </p>
 
@@ -367,7 +367,7 @@ export default function EvidenceModal({
                   return (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200/90 text-xs text-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200 text-xs text-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                     >
                       <div className="flex items-start gap-2.5">
                         {isAnonReport ? (
@@ -379,28 +379,28 @@ export default function EvidenceModal({
                           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                             {isAnonReport ? (
                               <>
-                                <span className="px-1.5 py-0.5 rounded-md bg-[#EEF0FF] text-[#5455EE] font-black text-[10px] tracking-wider uppercase">
+                                <span className="px-2 py-0.5 rounded-md bg-[#EEF0FF] text-[#5455EE] font-medium text-xs tracking-wider uppercase leading-[18px]">
                                   Case #R004
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded-md bg-slate-200/70 text-slate-700 font-bold text-[10px]">
+                                <span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-700 font-medium text-xs leading-[18px]">
                                   ANON-4827
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">
+                                <span className="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-medium text-xs leading-[18px] border border-rose-200">
                                   High Priority
                                 </span>
                               </>
                             ) : (
                               <>
-                                <span className="px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 font-black text-[10px] tracking-wider uppercase border border-teal-200/60">
+                                <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 font-medium text-xs tracking-wider uppercase leading-[18px] border border-teal-200/60">
                                   Voluntary Feedback
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded-md bg-slate-200/70 text-slate-600 font-bold text-[10px]">
+                                <span className="px-2 py-0.5 rounded-md bg-slate-200/70 text-slate-600 font-medium text-xs leading-[18px]">
                                   Anonymous Pod
                                 </span>
                               </>
                             )}
                           </div>
-                          <p className="text-slate-700 leading-relaxed font-medium">
+                          <p className="text-sm font-normal leading-[22px] text-slate-700">
                             {itemStr.replace(/^(?:Anonymous report|Voluntary feedback):\s*/i, '')}
                           </p>
                         </div>
@@ -411,7 +411,7 @@ export default function EvidenceModal({
                         <button
                           type="button"
                           onClick={handleReviewSpecificReport}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#5455EE] hover:bg-[#4546DF] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer whitespace-nowrap self-start sm:self-center flex-shrink-0 group"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4546DF] text-white text-sm font-medium leading-5 shadow-xs hover:shadow-md transition-all cursor-pointer whitespace-nowrap self-start sm:self-center flex-shrink-0 group"
                           title="Open Confidential Report R004 in Triage Modal"
                         >
                           <span>Review Report R004</span>
@@ -424,7 +424,7 @@ export default function EvidenceModal({
                         <button
                           type="button"
                           onClick={handleGoToFeedback}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#EEF0FF] text-slate-700 hover:text-[#5455EE] border border-slate-200 hover:border-[#5455EE]/40 text-xs font-bold transition-all cursor-pointer whitespace-nowrap self-start sm:self-center flex-shrink-0 group"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-[#EEF0FF] text-slate-700 hover:text-[#5455EE] border border-slate-200 hover:border-[#5455EE]/40 text-sm font-medium leading-5 transition-all cursor-pointer whitespace-nowrap self-start sm:self-center flex-shrink-0 group"
                           title="View all voluntary feedback in Reports page"
                         >
                           <span>View Feedback</span>
@@ -446,13 +446,13 @@ export default function EvidenceModal({
 
             {/* Bottom link to Feedback & Reports full view */}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 font-medium">
+              <span className="text-xs font-normal leading-[18px] text-slate-500">
                 Confidential triage & resolution workflow
               </span>
               <button
                 type="button"
                 onClick={handleGoToFeedback}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#5455EE] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-sm font-medium leading-5 text-[#5455EE] hover:underline cursor-pointer"
               >
                 <span>Open Feedback & Reports full view</span>
                 <ArrowRight size={12} />
@@ -467,16 +467,16 @@ export default function EvidenceModal({
                 <div className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center flex-shrink-0">
                   <Users2 size={14} />
                 </div>
-                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+                <h4 className="text-sm font-semibold leading-5 text-slate-900 uppercase tracking-wide">
                   Community Signals
                 </h4>
               </div>
-              <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200/60">
+              <span className="text-xs font-medium leading-[18px] text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200/60">
                 Peer Discussion
               </span>
             </div>
 
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+            <p className="text-sm font-normal leading-[22px] text-slate-700">
               {communitySummary}
             </p>
 
@@ -485,14 +485,14 @@ export default function EvidenceModal({
               <button
                 type="button"
                 onClick={handleGoToCommunityPost}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200/80 text-xs font-bold transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200/80 text-sm font-medium leading-5 transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
                 title="Open related discussion on Community Board (COM-1)"
               >
                 <Users2 size={13} />
                 <span>View related community post (COM-1)</span>
                 <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
-              <span className="text-[10px] text-slate-400 italic">
+              <span className="text-xs font-normal leading-[18px] text-slate-500">
                 *Peer sentiment signal · Identities permanently masked
               </span>
             </div>
@@ -504,14 +504,14 @@ export default function EvidenceModal({
               <div className="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center flex-shrink-0">
                 <Bot size={14} />
               </div>
-              <h4 className="text-xs font-extrabold text-amber-950 uppercase tracking-wide">
+              <h4 className="text-sm font-semibold leading-5 text-amber-950 uppercase tracking-wide">
                 AI Assistant (Eko Recurring Pattern)
               </h4>
             </div>
-            <p className="text-xs text-amber-950 leading-relaxed font-medium">
+            <p className="text-sm font-normal leading-[22px] text-amber-950">
               {aiSummary}
             </p>
-            <p className="text-[10px] text-amber-800 italic">
+            <p className="text-xs font-normal leading-[18px] text-amber-900/80">
               *Conversation content is isolated and confidential. Only aggregated friction patterns are shared.
             </p>
           </div>
@@ -522,18 +522,18 @@ export default function EvidenceModal({
               <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
                 <TrendingUp size={14} />
               </div>
-              <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
+              <h4 className="text-sm font-semibold leading-5 text-slate-900 uppercase tracking-wide">
                 Operational Indicators
               </h4>
             </div>
-            <ul className="space-y-1.5 pl-4 text-xs text-slate-700 list-disc font-medium">
+            <ul className="space-y-1.5 pl-4 text-sm font-normal leading-[22px] text-slate-700 list-disc">
               {operationalList.map((indicator, idx) => (
                 <li key={idx} className="leading-relaxed">
                   {indicator}
                 </li>
               ))}
             </ul>
-            <p className="text-[10px] text-slate-400 italic">
+            <p className="text-xs font-normal leading-[18px] text-slate-500">
               *Department telemetry aggregates used as systemic context, not individual performance assessments.
             </p>
           </div>
@@ -544,7 +544,7 @@ export default function EvidenceModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm leading-5 transition-colors cursor-pointer"
           >
             Close
           </button>

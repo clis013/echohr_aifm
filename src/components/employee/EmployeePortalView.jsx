@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CATEGORIES, MAYA_PROFILE } from '../../data/mockData';
+import { useApp } from '../../context/AppContext';
 import EkoChatView from './EkoChatView';
 import EmployeeVoiceHub from './EmployeeVoiceHub';
+import CompanyPoliciesView from './CompanyPoliciesView';
 import ConfidentialReportModal from './ConfidentialReportModal';
 import PulseSurveyModal from './PulseSurveyModal';
 import ConstructiveFeedbackModal from './ConstructiveFeedbackModal';
@@ -111,8 +113,61 @@ export default function EmployeePortalView({
   const [detailRecordTarget, setDetailRecordTarget] = useState(null);
   const [recordPrivacyOpen, setRecordPrivacyOpen] = useState(false);
 
+  const { askEkoQuestion } = useApp();
+  const [activeVoiceTab, setActiveVoiceTab] = useState(
+    initialVoiceTab === 'pulse' || initialVoiceTab === 'report' || initialVoiceTab === 'feedback'
+      ? initialVoiceTab
+      : 'feedback'
+  );
+
+  // Initial records for Maya Tan (starts without pulse survey so reminder banner is shown)
+  const initialMayaRecords = [
+    {
+      id: 'ANON-4827',
+      displayId: 'R001',
+      systemId: 'ANON-4827',
+      type: 'report',
+      title: 'Repeated workload transfers and conflicting priorities',
+      category: 'con_01',
+      categoryLabel: 'Burnout & Workload Imbalance',
+      department: 'Engineering',
+      date: '20 October 2026',
+      status: 'In Progress',
+      reviewStatus: 'Reviewed',
+      resolutionStatus: 'In Progress',
+      description: 'An anonymous Engineering employee reports repeated additional task assignments from a senior colleague without manager alignment, creating sprint overload.',
+      outcome: 'Clear task ownership and workload rebalancing',
+      privacyChoice: 'optionA',
+      updates: [
+        {
+          id: 1,
+          date: '20 Oct, 11:30 AM',
+          text: 'Assigned to Senior HRBP and Head of Engineering for workload allocation review.',
+        },
+      ],
+    },
+    {
+      id: 'FDB-1042',
+      displayId: 'F001',
+      systemId: 'FDB-1042',
+      type: 'feedback',
+      title: 'Standardize Sprint Handover Checklist for New Hires',
+      category: 'process',
+      categoryLabel: 'Process & Tooling',
+      department: 'Engineering',
+      date: '18 October 2026',
+      status: 'Need Review',
+      reviewStatus: 'Pending Review',
+      resolutionStatus: 'Need Review',
+      description: 'Suggesting a standardized task acceptance criteria checklist before senior peers hand off testing tickets to new joiners.',
+      outcome: 'Better onboarding and reduced ambiguity',
+      privacyChoice: 'optionB',
+      updates: [],
+    },
+  ];
+
   // Submitted Records / Activity List - separated for Maya and Daniel
-  const [mayaRecords, setMayaRecords] = useState([]);
+  const [mayaRecords, setMayaRecords] = useState(initialMayaRecords);
   const [managerRecords, setManagerRecords] = useState([]);
   const submittedRecords = isManager ? managerRecords : mayaRecords;
   const setSubmittedRecords = (updater) => {
@@ -362,6 +417,7 @@ Please confirm this priority order with your manager (Daniel Lim).`,
       }
       return [newPulseRecord, ...prev];
     });
+    setActiveVoiceTab('pulse');
     if (onShowToast) onShowToast('Your pulse survey has been submitted.');
   };
 
@@ -623,17 +679,32 @@ Your concern is being taken seriously. No conclusion has been reached about indi
         />
       )}
 
-      {/* VIEW 2: VOICE & FEEDBACK HUB */}
+      {/* VIEW 2: COMPANY POLICIES & KNOWLEDGE BASE */}
+      {activePage === 'emp_resources' && (
+        <CompanyPoliciesView
+          onAskEko={(prompt) => {
+            askEkoQuestion(prompt);
+          }}
+          setActivePage={setActivePage}
+        />
+      )}
+
+      {/* VIEW 3: VOICE & FEEDBACK HUB (3 Tabs: Feedback, Report, Pulse Survey) */}
       {activePage === 'emp_feedback' && (
         <EmployeeVoiceHub
-          onOpenModal={(tab) => setVoiceTab(tab)}
+          onOpenModal={(tab) => {
+            setVoiceTab(tab);
+            if (tab === 'feedback' || tab === 'report' || tab === 'pulse') {
+              setActiveVoiceTab(tab);
+            }
+          }}
           submittedRecords={submittedRecords}
-          recordFilter={recordFilter}
-          setRecordFilter={setRecordFilter}
           submittedAlert={submittedAlert}
           setSubmittedAlert={setSubmittedAlert}
           onViewRecord={(rec) => setDetailRecordTarget(rec)}
           isReportResolved={isReportResolved}
+          activeTab={activeVoiceTab}
+          setActiveTab={setActiveVoiceTab}
         />
       )}
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, FileText, Users, ChevronLeft, ChevronRight, Bot, ClipboardCheck, Briefcase, ListTodo } from 'lucide-react';
+import { LayoutGrid, FileText, Users, ChevronLeft, ChevronRight, Bot, ClipboardCheck, Briefcase, ListTodo, BookOpen } from 'lucide-react';
 import EchoLogo from './EchoLogo';
 
 export default function Sidebar({
@@ -15,6 +15,7 @@ export default function Sidebar({
     { id: 'reports', label: 'Feedback & Reports', icon: FileText, badge: '24' },
     { id: 'community', label: 'Community Board', icon: Users },
     { id: 'actions', label: 'Actions & Follow-up', icon: ListTodo },
+    { id: 'hr_resources', label: 'Company Resources', icon: BookOpen },
   ];
 
   // Employee side
@@ -22,14 +23,16 @@ export default function Sidebar({
     { id: 'emp_chat', label: 'Eko Assistant', icon: Bot, badge: 'AI' },
     { id: 'emp_feedback', label: 'Voice & Feedback', icon: ClipboardCheck },
     { id: 'community', label: 'Community Board', icon: Users },
+    { id: 'emp_resources', label: 'Company Policies', icon: BookOpen },
   ];
 
-  // Manager side (Daniel Lim: Eko Assistant, Manager Workspace, Voice & Feedback, Community Board)
+  // Manager side (Daniel Lim: Eko Assistant, Manager Workspace, Voice & Feedback, Community Board, Company Policies)
   const managerNavItems = [
     { id: 'emp_chat', label: 'Eko Assistant', icon: Bot, badge: 'AI' },
     { id: 'manager_workspace', label: 'Manager Workspace', icon: Briefcase },
     { id: 'emp_feedback', label: 'Voice & Feedback', icon: ClipboardCheck },
     { id: 'community', label: 'Community Board', icon: Users },
+    { id: 'emp_resources', label: 'Company Policies', icon: BookOpen },
   ];
 
   let navItems = hrNavItems;
@@ -76,7 +79,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => setUserRole && setUserRole('employee')}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer ${
                   userRole === 'employee'
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-900'
@@ -88,7 +91,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => setUserRole && setUserRole('hr')}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer ${
                   userRole === 'hr'
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-900'
@@ -100,7 +103,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => setUserRole && setUserRole('manager')}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1 py-1.5 rounded-xl text-[13px] font-medium leading-5 transition-all cursor-pointer ${
                   userRole === 'manager'
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-900'
@@ -120,7 +123,7 @@ export default function Sidebar({
                 else setUserRole('employee');
               }}
               title={`Role: ${userRole === 'employee' ? 'Employee Portal' : userRole === 'hr' ? 'HR Portal' : 'Manager Workspace'} (Click to cycle)`}
-              className="w-10 h-10 rounded-xl bg-[#F1F3F9] hover:bg-slate-200 text-sm flex items-center justify-center cursor-pointer shadow-xs"
+              className="w-10 h-10 rounded-xl bg-[#F1F3F9] hover:bg-slate-200 text-slate-700 text-sm flex items-center justify-center cursor-pointer shadow-xs"
             >
               {userRole === 'employee' ? '👤' : userRole === 'hr' ? '👔' : '💼'}
             </button>
@@ -144,12 +147,12 @@ export default function Sidebar({
                 key={item.id}
                 onClick={() => setActivePage(item.id)}
                 title={isMinimized ? item.label : undefined}
-                className={`relative w-full flex items-center rounded-xl font-bold transition-all duration-150 cursor-pointer ${
+                className={`relative w-full flex items-center rounded-xl font-medium text-sm leading-5 transition-all duration-150 cursor-pointer ${
                   isMinimized ? 'justify-center p-3' : 'px-3.5 py-2.5 gap-3'
                 } ${
                   isActive
-                    ? 'bg-[#F4F5FA] text-slate-900 font-extrabold'
-                    : 'text-slate-500 hover:bg-[#F8F9FD] hover:text-slate-900 font-semibold'
+                    ? 'bg-[#F4F5FA] text-slate-900 font-medium'
+                    : 'text-slate-600 hover:bg-[#F8F9FD] hover:text-slate-900 font-medium'
                 }`}
               >
                 {Icon && (
@@ -162,10 +165,10 @@ export default function Sidebar({
                 )}
                 {!isMinimized && (
                   <>
-                    <span className="flex-1 text-left text-[13px] whitespace-nowrap">{item.label}</span>
+                    <span className="flex-1 text-left text-sm leading-5 font-medium whitespace-nowrap">{item.label}</span>
                     {item.badge && (
                       <span
-                        className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                        className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium leading-[18px] ${
                           item.badge === 'AI'
                             ? 'bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/20'
                             : 'bg-rose-50 text-rose-600 border border-rose-200'
@@ -204,14 +207,14 @@ export default function Sidebar({
             </div>
             {!isMinimized && (
               <div className="flex-1 overflow-hidden">
-                <div className="text-xs font-bold text-slate-900 truncate">
+                <div className="text-sm font-semibold leading-5 text-slate-900 truncate">
                   {userRole === 'employee'
                     ? 'Maya Tan'
                     : userRole === 'manager'
                     ? 'Daniel Lim'
                     : 'Sarah Jenkins'}
                 </div>
-                <div className="text-[11px] text-slate-400 truncate">
+                <div className="text-xs font-normal leading-[18px] text-slate-500 truncate">
                   {userRole === 'employee'
                     ? 'Junior Software Engineer'
                     : userRole === 'manager'

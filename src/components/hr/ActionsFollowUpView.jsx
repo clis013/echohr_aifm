@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ListTodo,
   Clock,
@@ -19,6 +19,8 @@ import {
   Layers,
   Search,
   Filter,
+  ChevronDown,
+  ChevronUp,
   ChevronRight,
   MessageSquare,
   Bot,
@@ -26,10 +28,99 @@ import {
   Eye,
   FileCheck2,
   BellRing,
+  Edit3,
+  Sliders,
+  Plus,
+  Trash2,
+  X,
+  FileText,
+  Quote,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import EvidenceModal from './EvidenceModal';
 import { dataService } from '../../services/dataService';
+
+// Default initial outcome tracking metrics for action plans
+const getInitialOutcomeMetrics = (planId) => {
+  const common = [
+    {
+      id: 'pulse',
+      label: 'Pulse Manageability Score',
+      beforeRate: '2.8 / 5',
+      afterRate: '3.6 / 5',
+      change: '+28% recovery',
+      tone: 'emerald',
+      source: 'Weekly Team Pulse Survey',
+      details: 'Role clarity and sprint load manageability scores improved notably across 23 responses.',
+      enabled: true,
+    },
+    {
+      id: 'overtime',
+      label: 'Department Overtime Surge',
+      beforeRate: '+18%',
+      afterRate: '+6%',
+      change: '-12% reduction',
+      tone: 'emerald',
+      source: 'Timesheet & JIRO Audit',
+      details: 'Unplanned sprint overtime moderated from +18% to +6%. JIRO deadline collisions dropped from 3 to 0.',
+      enabled: true,
+    },
+    {
+      id: 'ai_patterns',
+      label: 'EkoAI Ambiguity Inquiries',
+      beforeRate: '6 queries',
+      afterRate: '2 queries',
+      change: '-67% friction',
+      tone: 'emerald',
+      source: 'Eko AI Workplace Telemetry',
+      details: 'Inquiries mentioning task handoffs or sprint ambiguity dropped from 6 to 2 over the past 14 days.',
+      enabled: true,
+    },
+    {
+      id: 'reports',
+      label: 'New Escalation Reports',
+      beforeRate: '3 / cycle',
+      afterRate: '0 new reports',
+      change: 'Safe Range',
+      tone: 'emerald',
+      source: 'Confidential Feedback Hub',
+      details: 'No new anonymous or named reports submitted for this squad in the past 14 days.',
+      enabled: true,
+    },
+    {
+      id: 'community',
+      label: 'Community Board Friction Heat',
+      beforeRate: '24 upvotes',
+      afterRate: 'Thread resolved',
+      change: 'Cooled',
+      tone: 'blue',
+      source: 'Peer Community Board',
+      details: 'Friction discussion thread cooled. 1 positive comment acknowledging clearer priority discussions.',
+      enabled: false,
+    },
+  ];
+
+  if (planId === 'AP-02') {
+    common[0].beforeRate = '2.4 / 5';
+    common[0].afterRate = '3.1 / 5';
+    common[0].change = '+29% recovery';
+    common[1].label = 'PR Review Cycle Time';
+    common[1].beforeRate = '96h SLA';
+    common[1].afterRate = '28h SLA';
+    common[1].change = '-71% turnaround';
+  } else if (planId === 'AP-03') {
+    common[0].label = 'Recognition & Valued Index';
+    common[0].beforeRate = '2.9 / 5';
+    common[0].afterRate = '4.2 / 5';
+    common[0].change = '+44% sentiment';
+    common[1].label = 'Peer Spotlights Logged';
+    common[1].beforeRate = '2 / month';
+    common[1].afterRate = '14 / month';
+    common[1].change = '+600% surge';
+  }
+
+  return common;
+};
 
 export default function ActionsFollowUpView() {
   const {
@@ -41,28 +132,48 @@ export default function ActionsFollowUpView() {
     handleEscalateActionPlan,
     handleSendReminder,
     handleNavigateToConcern,
+    handleUpdateActionPlan,
     showToast,
   } = useApp();
 
-  // Filters & Search State
+  // Search & Status filters
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Expandable dropdown state: which action plan ID is currently expanded (defaults to AP-01)
+  const [expandedPlanId, setExpandedPlanId] = useState('AP-01');
+
+  // Plan Edit State: holds form values for in-place editing
+  const [editingPlanData, setEditingPlanData] = useState({});
+
+  // Outcome Tracking customization state: map of planId -> metrics array
+  const [planMetrics, setPlanMetrics] = useState(() => {
+    const initialMap = {};
+    actionPlans.forEach((plan) => {
+      initialMap[plan.id] = getInitialOutcomeMetrics(plan.id);
+    });
+    return initialMap;
+  });
+
+  // Modal / selector states
+  const [editingMetricsPlanId, setEditingMetricsPlanId] = useState(null); // which plan is customizing outcome metrics
+  const [newMetricForm, setNewMetricForm] = useState({
+    label: '',
+    beforeRate: '',
+    afterRate: '',
+    change: '',
+    source: '',
+  });
+  const [showAddMetricModal, setShowAddMetricModal] = useState(false);
+
+  // Evidence Modal for inspecting raw signal telemetry
   const [evidenceConcern, setEvidenceConcern] = useState(null);
+
+  // Revision / Escalation Modals
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
-  const [revisionNote, setRevisionNote] = useState('');
+  const [activeRevisionPlanId, setActiveRevisionPlanId] = useState(null);
   const [escalateModalOpen, setEscalateModalOpen] = useState(false);
-
-  // Detail View ref for smooth scrolling when "View details" / "Review update" clicked
-  const detailViewRef = useRef(null);
-
-  // Selected Action Plan (defaults to selectedActionPlanId or AP-01 or first available)
-  const currentPlan = useMemo(() => {
-    return (
-      actionPlans.find((p) => p.id === selectedActionPlanId) ||
-      actionPlans.find((p) => p.id === 'AP-01') ||
-      actionPlans[0]
-    );
-  }, [actionPlans, selectedActionPlanId]);
+  const [activeEscalatePlanId, setActiveEscalatePlanId] = useState(null);
 
   // Filtered action plans
   const filteredPlans = useMemo(() => {
@@ -83,14 +194,15 @@ export default function ActionsFollowUpView() {
             plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             plan.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
             plan.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            plan.linkedConcern.toLowerCase().includes(searchQuery.toLowerCase());
+            plan.linkedConcern.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            plan.linkedReport?.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchStatus && matchSearch;
     });
   }, [actionPlans, statusFilter, searchQuery]);
 
-  // 1. Metric Calculations for the 6 Summary Cards
-  const metrics = useMemo(() => {
+  // Metric summary calculations for 6 top cards
+  const summaryMetrics = useMemo(() => {
     const active = actionPlans.filter((p) => p.status !== 'Completed').length;
     const awaitingUpdate = actionPlans.filter((p) =>
       p.status.toLowerCase().includes('awaiting')
@@ -100,7 +212,6 @@ export default function ActionsFollowUpView() {
     ).length;
     const overdue = actionPlans.filter((p) => p.status === 'Overdue').length;
     const completedMonth = actionPlans.filter((p) => p.status === 'Completed').length + 1; // +1 historical
-
     return {
       active,
       awaitingUpdate,
@@ -111,81 +222,145 @@ export default function ActionsFollowUpView() {
     };
   }, [actionPlans]);
 
-  const getStatusBadge = (status) => {
-    const lower = (status || '').toLowerCase();
-    if (lower.includes('progress')) {
-      return 'bg-amber-50 text-amber-800 border-amber-200';
-    }
-    if (lower.includes('awaiting')) {
-      return 'bg-purple-50 text-purple-700 border-purple-200';
-    }
-    if (lower.includes('monitoring')) {
-      return 'bg-blue-50 text-blue-700 border-blue-200';
-    }
-    if (lower.includes('completed')) {
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    }
-    if (lower.includes('escalated') || lower.includes('overdue')) {
-      return 'bg-rose-50 text-rose-700 border-rose-200';
-    }
-    return 'bg-slate-50 text-slate-700 border-slate-200';
-  };
-
-  const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'Medium':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      default:
-        return 'bg-slate-50 text-slate-600 border-slate-200';
+  // Toggle Accordion Dropdown
+  const handleToggleExpand = (plan) => {
+    if (expandedPlanId === plan.id) {
+      setExpandedPlanId(null);
+    } else {
+      setExpandedPlanId(plan.id);
+      setSelectedActionPlanId(plan.id);
+      // Initialize edit form with plan values
+      if (!editingPlanData[plan.id]) {
+        setEditingPlanData((prev) => ({
+          ...prev,
+          [plan.id]: {
+            title: plan.title,
+            owner: plan.owner,
+            department: plan.department,
+            dueDate: plan.dueDate || plan.due,
+            status: plan.status,
+            progress: plan.progress,
+            managerUpdate: plan.managerUpdate || '',
+            nextStep: plan.nextStep || 'Weekly check-in to verify task handoff adherence',
+          },
+        }));
+      }
     }
   };
 
-  const handleSelectPlan = (planId, scrollToDetail = false) => {
-    setSelectedActionPlanId(planId);
-    if (scrollToDetail && detailViewRef.current) {
-      detailViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  // Update in-memory edit draft for a plan
+  const handleDraftChange = (planId, field, value) => {
+    setEditingPlanData((prev) => ({
+      ...prev,
+      [planId]: {
+        ...(prev[planId] || {}),
+        [field]: value,
+      },
+    }));
   };
 
-  const openEvidenceForConcern = (concernId) => {
+  // Commit Save Changes for a Plan
+  const handleSavePlanChanges = (planId) => {
+    const draft = editingPlanData[planId];
+    if (!draft) return;
+    handleUpdateActionPlan({
+      id: planId,
+      ...draft,
+      lastUpdate: 'Updated just now by HR',
+    });
+  };
+
+  // Toggle metric visibility / inclusion
+  const handleToggleMetric = (planId, metricId) => {
+    setPlanMetrics((prev) => {
+      const currentList = prev[planId] || getInitialOutcomeMetrics(planId);
+      const updated = currentList.map((m) =>
+        m.id === metricId ? { ...m, enabled: !m.enabled } : m
+      );
+      return { ...prev, [planId]: updated };
+    });
+  };
+
+  // Update before / after rates on a metric
+  const handleUpdateMetricRate = (planId, metricId, field, value) => {
+    setPlanMetrics((prev) => {
+      const currentList = prev[planId] || getInitialOutcomeMetrics(planId);
+      const updated = currentList.map((m) =>
+        m.id === metricId ? { ...m, [field]: value } : m
+      );
+      return { ...prev, [planId]: updated };
+    });
+  };
+
+  // Add custom outcome metric
+  const handleAddCustomMetric = (planId) => {
+    if (!newMetricForm.label.trim()) {
+      showToast('Please enter a metric label.');
+      return;
+    }
+    const newMetric = {
+      id: `custom_${Date.now()}`,
+      label: newMetricForm.label,
+      beforeRate: newMetricForm.beforeRate || 'Baseline',
+      afterRate: newMetricForm.afterRate || 'Target',
+      change: newMetricForm.change || 'Tracking',
+      tone: 'emerald',
+      source: newMetricForm.source || 'HR Custom Outcome Tracking',
+      details: 'Custom telemetry indicator configured by HR partner.',
+      enabled: true,
+    };
+    setPlanMetrics((prev) => ({
+      ...prev,
+      [planId]: [...(prev[planId] || getInitialOutcomeMetrics(planId)), newMetric],
+    }));
+    setShowAddMetricModal(false);
+    setNewMetricForm({ label: '', beforeRate: '', afterRate: '', change: '', source: '' });
+    showToast(`Added custom outcome metric: ${newMetric.label}`);
+  };
+
+  // Open Evidence modal for linked concern
+  const handleOpenEvidence = (concernId) => {
     const allConcerns = dataService.getDepartmentData('all').priorityConcerns || [];
     const target = allConcerns.find((c) => c.id === concernId || c.code === concernId);
     if (target) {
       setEvidenceConcern(target);
     } else {
-      showToast(`Showing evidence data for concern ${concernId}`);
+      showToast(`Showing raw signal evidence for ${concernId}`);
     }
   };
 
+  const getStatusBadge = (status) => {
+    const lower = (status || '').toLowerCase();
+    if (lower.includes('progress')) return 'bg-amber-50 text-amber-800 border-amber-200';
+    if (lower.includes('awaiting')) return 'bg-purple-50 text-purple-700 border-purple-200';
+    if (lower.includes('monitoring')) return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (lower.includes('completed')) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (lower.includes('escalated') || lower.includes('overdue')) return 'bg-rose-50 text-rose-700 border-rose-200';
+    return 'bg-slate-50 text-slate-700 border-slate-200';
+  };
+
   return (
-    <div className="flex flex-col gap-7 animate-in fade-in duration-200">
-      {/* Page Description Subheader */}
+    <div className="flex flex-col gap-7 w-full max-w-7xl mx-auto pb-14 animate-in fade-in duration-200">
+      {/* 1. PAGE HEADER (Clean subtitle without duplicate H2 for UI consistency) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 -mt-2">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            Actions & Follow-up
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Track execution after assignment, review manager progress updates, and monitor disengagement recovery.
-          </p>
-        </div>
+        <p className="text-sm font-normal leading-[22px] text-slate-500">
+          Monitor before-and-after recovery rates, edit action plans in-place, and track linked employee feedback.
+        </p>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EBECEF] text-xs font-semibold text-slate-600 shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EBECEF] text-xs font-medium leading-[18px] text-slate-600 shadow-2xs">
             <ShieldAlert size={14} className="text-[#5455EE]" />
-            <span>Strict reporter confidentiality maintained across all action trackers</span>
+            <span>Employee confidentiality strictly protected across all linked cases</span>
           </div>
         </div>
       </div>
 
-      {/* 1. SUMMARY METRIC CARDS (6 Cards Required) */}
+      {/* 2. SUMMARY METRIC CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 sm:gap-4">
         {/* Card 1: Active action plans */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Active Plans
             </span>
             <div className="w-8 h-8 rounded-xl bg-[#EEF0FF] text-[#5455EE] flex items-center justify-center">
@@ -193,10 +368,10 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {metrics.active}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">
+              {summaryMetrics.active}
             </div>
-            <div className="text-[11px] font-medium text-slate-500 mt-0.5 flex items-center gap-1">
+            <div className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5 flex items-center gap-1">
               <span className="text-indigo-600 font-bold">3 in progress</span> · 2 squads
             </div>
           </div>
@@ -205,7 +380,7 @@ export default function ActionsFollowUpView() {
         {/* Card 2: Awaiting manager update */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Awaiting Update
             </span>
             <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -213,10 +388,10 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-purple-700 tracking-tight">
-              {metrics.awaitingUpdate}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-purple-700">
+              {summaryMetrics.awaitingUpdate}
             </div>
-            <div className="text-[11px] font-medium text-purple-700 mt-0.5">
+            <div className="text-xs font-normal leading-[18px] text-purple-700 mt-0.5">
               AP-02 · Elena Chen (Eng)
             </div>
           </div>
@@ -225,7 +400,7 @@ export default function ActionsFollowUpView() {
         {/* Card 3: Due this week */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Due This Week
             </span>
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center">
@@ -233,10 +408,10 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {metrics.dueThisWeek}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">
+              {summaryMetrics.dueThisWeek}
             </div>
-            <div className="text-[11px] font-medium text-amber-800 mt-0.5 font-bold">
+            <div className="text-xs font-medium leading-[18px] text-amber-800 mt-0.5">
               AP-01 due Friday (30 Oct)
             </div>
           </div>
@@ -245,7 +420,7 @@ export default function ActionsFollowUpView() {
         {/* Card 4: Overdue */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Overdue
             </span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -253,19 +428,19 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight">
-              {metrics.overdue}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">
+              {summaryMetrics.overdue}
             </div>
-            <div className="text-[11px] font-medium text-emerald-600 mt-0.5">
+            <div className="text-xs font-normal leading-[18px] text-emerald-600 mt-0.5">
               100% on-track adherence
             </div>
           </div>
         </div>
 
-        {/* Card 5: Completed this month */}
+        {/* Card 5: Completed */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Completed
             </span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -273,19 +448,19 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {metrics.completedMonth}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">
+              {summaryMetrics.completedMonth}
             </div>
-            <div className="text-[11px] font-medium text-slate-500 mt-0.5">
+            <div className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5">
               AP-04 + 1 historical resolved
             </div>
           </div>
         </div>
 
-        {/* Card 6: Concerns resolved after action */}
+        {/* Card 6: Resolved Rate */}
         <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EBECEF] shadow-card hover:border-[#5455EE]/40 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
               Resolved Rate
             </span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-[#5455EE] flex items-center justify-center">
@@ -293,30 +468,30 @@ export default function ActionsFollowUpView() {
             </div>
           </div>
           <div className="mt-2.5">
-            <div className="text-2xl sm:text-3xl font-black text-[#5455EE] tracking-tight">
-              {metrics.resolvedRate}
+            <div className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-[#5455EE]">
+              {summaryMetrics.resolvedRate}
             </div>
-            <div className="text-[11px] font-medium text-slate-500 mt-0.5">
+            <div className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5">
               3 of 4 signal trends cooled
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. ACTION PLAN TABLE SECTION */}
-      <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 sm:p-6 shadow-card hover:border-[#5455EE]/30 transition-all flex flex-col gap-5">
-        {/* Table Controls Header: Search & Filter Tabs */}
+      {/* 3. ACTION PLAN LIST SECTION (With in-place expandable dropdowns) */}
+      <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 sm:p-6 shadow-card flex flex-col gap-5">
+        {/* Header Controls: Title, Search & Filters */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center">
               <ListTodo size={16} />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                Active Action Plans Tracker
+              <h3 className="text-xl font-semibold leading-7 tracking-tight text-slate-900">
+                Action Plans & Recovery Tracker
               </h3>
-              <p className="text-xs text-slate-500">
-                Click any row to inspect execution progress and outcome signals below.
+              <p className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5">
+                Click any row dropdown to inspect before-and-after rate changes, edit plans, and track linked employee cases.
               </p>
             </div>
           </div>
@@ -327,10 +502,10 @@ export default function ActionsFollowUpView() {
               <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search plan, owner, concern..."
+                placeholder="Search plan, owner, case..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#F8F9FD] border border-[#EBECEF] rounded-xl pl-9 pr-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-[#5455EE] transition-all"
+                className="w-full bg-[#F8F9FD] border border-[#EBECEF] rounded-xl pl-9 pr-3.5 py-2 text-sm font-normal text-slate-800 placeholder-slate-400 outline-none focus:border-[#5455EE] transition-all leading-5"
               />
             </div>
 
@@ -345,8 +520,9 @@ export default function ActionsFollowUpView() {
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setStatusFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium leading-5 transition-all whitespace-nowrap cursor-pointer ${
                     statusFilter === tab.id
                       ? 'bg-white text-slate-900 shadow-2xs'
                       : 'text-slate-500 hover:text-slate-900'
@@ -359,590 +535,590 @@ export default function ActionsFollowUpView() {
           </div>
         </div>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto -mx-5 sm:-mx-6 px-5 sm:px-6">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-[#EBECEF] text-[11px] font-extrabold text-slate-400 uppercase tracking-wider bg-[#F8F9FD]/60">
-                <th className="py-3 px-3.5 rounded-l-xl">Action Plan ID & Title</th>
-                <th className="py-3 px-3">Linked Concern</th>
-                <th className="py-3 px-3">Owner</th>
-                <th className="py-3 px-3">Department</th>
-                <th className="py-3 px-3">Due Date</th>
-                <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-3">Progress</th>
-                <th className="py-3 px-3">Last Update</th>
-                <th className="py-3 px-3 text-right rounded-r-xl">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredPlans.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
-                    No action plans match the current filter or search criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredPlans.map((plan) => {
-                  const isSelected = currentPlan?.id === plan.id;
-                  return (
-                    <tr
-                      key={plan.id}
-                      onClick={() => handleSelectPlan(plan.id, false)}
-                      className={`group transition-colors cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#EEF0FF]/50 hover:bg-[#EEF0FF]/70'
-                          : 'hover:bg-[#F8F9FD]'
-                      }`}
-                    >
-                      {/* 1. Action plan ID and title */}
-                      <td className="py-3.5 px-3.5 font-bold">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`font-mono text-xs px-2 py-0.5 rounded-md font-extrabold ${
-                              isSelected
-                                ? 'bg-[#5455EE] text-white shadow-2xs'
-                                : 'bg-slate-100 text-slate-800'
-                            }`}
-                          >
+        {/* ACTION PLANS ACCORDION LIST */}
+        <div className="flex flex-col gap-3.5">
+          {filteredPlans.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">
+              No action plans match the current search or status filter.
+            </div>
+          ) : (
+            filteredPlans.map((plan) => {
+              const isExpanded = expandedPlanId === plan.id;
+              const draft = editingPlanData[plan.id] || {
+                title: plan.title,
+                owner: plan.owner,
+                department: plan.department,
+                dueDate: plan.dueDate || plan.due,
+                status: plan.status,
+                progress: plan.progress,
+                managerUpdate: plan.managerUpdate || '',
+                nextStep: plan.nextStep || 'Weekly check-in to verify task handoff adherence',
+              };
+              const metrics = planMetrics[plan.id] || getInitialOutcomeMetrics(plan.id);
+              const enabledMetrics = metrics.filter((m) => m.enabled);
+
+              return (
+                <div
+                  key={plan.id}
+                  className={`border rounded-2xl transition-all overflow-hidden ${
+                    isExpanded
+                      ? 'border-[#5455EE]/40 bg-white shadow-md ring-2 ring-[#5455EE]/10'
+                      : 'border-[#EBECEF] bg-[#F8F9FD]/60 hover:border-slate-300 hover:bg-white'
+                  }`}
+                >
+                  {/* ACCORDION ROW HEADER: Shows Action title, Linked case, Owner, Department, Progress, Status */}
+                  <div
+                    onClick={() => handleToggleExpand(plan)}
+                    className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer select-none"
+                  >
+                    {/* Left: ID, Title & Linked Case badge */}
+                    <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-transform ${
+                          isExpanded
+                            ? 'bg-[#5455EE] text-white rotate-180'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        <ChevronDown size={16} />
+                      </div>
+
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs font-medium text-[#5455EE] bg-[#EEF0FF] px-2 py-0.5 rounded-md tracking-wider">
                             {plan.id}
                           </span>
-                          <span className="text-slate-900 group-hover:text-[#5455EE] font-bold line-clamp-1 max-w-[220px]">
-                            {plan.title}
+                          <span className="text-base font-semibold leading-6 text-slate-900 hover:text-[#5455EE] transition-colors truncate">
+                            {draft.title || plan.title}
                           </span>
                         </div>
-                      </td>
 
-                      {/* 2. Linked concern */}
-                      <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
+                        {/* Linked Case (Report / Feedback / Concern) */}
+                        <div className="flex items-center gap-2 text-xs flex-wrap">
+                          <span className="text-xs font-medium text-slate-500 leading-[18px]">Linked Case:</span>
+                          <span
                             onClick={(e) => {
                               e.stopPropagation();
                               handleNavigateToConcern(plan.linkedConcern, false);
                             }}
-                            className="inline-flex items-center gap-1 font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#F4F5FA] hover:bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/20 transition-colors cursor-pointer"
-                            title={`Navigate to ${plan.linkedConcern} on Dashboard`}
+                            className="inline-flex items-center gap-1 font-mono text-xs font-medium leading-[18px] px-2 py-0.5 rounded-md bg-indigo-50 text-[#5455EE] border border-indigo-200 hover:bg-indigo-100 transition-colors cursor-pointer"
+                            title="Click to view Concern card on Dashboard"
                           >
                             <span>{plan.linkedConcern}</span>
                             <ExternalLink size={10} />
-                          </button>
+                          </span>
+
+                          {plan.linkedReport && (
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEvidence(plan.linkedConcern);
+                              }}
+                              className="inline-flex items-center gap-1 text-xs font-medium leading-[18px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+                              title="Click to view linked employee report in Evidence Modal"
+                            >
+                              <FileText size={10} className="text-[#5455EE]" />
+                              <span>{plan.linkedReport} Report</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Owner, Department, Progress, Status */}
+                    <div className="flex items-center gap-4 sm:gap-6 flex-wrap lg:flex-nowrap justify-between lg:justify-end">
+                      {/* Owner */}
+                      <div className="flex items-center gap-1.5 min-w-[110px]">
+                        <User size={13} className="text-slate-400" />
+                        <span className="text-[13px] font-medium leading-5 text-slate-800">{draft.owner || plan.owner}</span>
+                      </div>
+
+                      {/* Department */}
+                      <div className="flex items-center gap-1 min-w-[100px]">
+                        <Building2 size={13} className="text-slate-400" />
+                        <span className="text-[13px] font-normal leading-5 text-slate-600">{draft.department || plan.department}</span>
+                      </div>
+
+                      {/* Progress Bar & % */}
+                      <div className="flex items-center gap-2 min-w-[120px]">
+                        <div className="w-16 sm:w-20 h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#5455EE] rounded-full transition-all duration-300"
+                            style={{ width: `${draft.progress || plan.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold leading-5 text-slate-900 tabular-nums">{draft.progress || plan.progress}%</span>
+                      </div>
+
+                      {/* Status Badge */}
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium leading-[18px] border whitespace-nowrap ${getStatusBadge(
+                          draft.status || plan.status
+                        )}`}
+                      >
+                        {draft.status || plan.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* EXPANDED DROPDOWN PANEL: Read, Edit & Update, Outcome Rate Tracking, Linked Employee Feedback */}
+                  {isExpanded && (
+                    <div className="px-5 pb-6 pt-2 border-t border-slate-100 flex flex-col gap-6 animate-in slide-in-from-top-2 duration-150">
+                      {/* 1. OUTCOME TRACKING: BEFORE & AFTER RATE COMPARISON */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-slate-50 border border-indigo-100 shadow-2xs flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-indigo-100">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <TrendingUp size={16} className="text-[#5455EE]" />
+                              <h4 className="text-base font-semibold leading-6 text-slate-900">
+                                Before vs. After Rate Comparison (Action in Progress)
+                              </h4>
+                              <span className="text-xs font-medium leading-[18px] text-white bg-[#5455EE] px-2.5 py-0.5 rounded-full">
+                                Live Telemetry
+                              </span>
+                            </div>
+                            <p className="text-xs font-normal leading-[18px] text-slate-500 mt-0.5">
+                              AI generates initial telemetry; HR can customize, select which metrics to view, and update rates below.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditingMetricsPlanId(editingMetricsPlanId === plan.id ? null : plan.id)
+                              }
+                              className={`px-3 py-1.5 rounded-xl text-sm font-medium leading-5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                                editingMetricsPlanId === plan.id
+                                  ? 'bg-slate-900 text-white'
+                                  : 'bg-white text-slate-700 hover:text-[#5455EE] border border-[#EBECEF] shadow-2xs'
+                              }`}
+                            >
+                              <Sliders size={13} />
+                              <span>{editingMetricsPlanId === plan.id ? 'Done Editing' : 'Customize Metrics'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowAddMetricModal(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-[#5455EE] border border-indigo-200 text-sm font-medium leading-5 flex items-center gap-1 cursor-pointer"
+                              title="Add custom metric to track"
+                            >
+                              <Plus size={13} />
+                              <span className="hidden sm:inline">Add Metric</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Metric Selector Checkbox Pills (Visible when in Customize Mode) */}
+                        {editingMetricsPlanId === plan.id && (
+                          <div className="p-3 bg-white rounded-xl border border-indigo-200 flex flex-col gap-2 animate-in fade-in duration-150">
+                            <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                              Select & Toggle Metrics to Display for {plan.id}:
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {metrics.map((m) => (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleToggleMetric(plan.id, m.id)}
+                                  className={`px-3 py-1.5 rounded-xl text-sm font-medium leading-5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                                    m.enabled
+                                      ? 'bg-[#5455EE] text-white shadow-xs'
+                                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                  }`}
+                                >
+                                  <span>{m.enabled ? '✓' : '+'}</span>
+                                  <span>{m.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Metric Comparison Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                          {enabledMetrics.map((metric) => (
+                            <div
+                              key={metric.id}
+                              className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all gap-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium leading-5 text-slate-700 truncate">
+                                  {metric.label}
+                                </span>
+                                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                  {metric.change}
+                                </span>
+                              </div>
+
+                              {/* Before ➔ After Rate Values */}
+                              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs font-bold">
+                                <div>
+                                  <span className="text-xs font-normal leading-[18px] text-slate-500 block uppercase">
+                                    Before Action
+                                  </span>
+                                  {editingMetricsPlanId === plan.id ? (
+                                    <input
+                                      type="text"
+                                      value={metric.beforeRate}
+                                      onChange={(e) =>
+                                        handleUpdateMetricRate(plan.id, metric.id, 'beforeRate', e.target.value)
+                                      }
+                                      className="w-16 bg-white border border-slate-300 rounded px-1 py-0.5 text-xs font-bold text-slate-800"
+                                    />
+                                  ) : (
+                                    <span className="text-sm font-normal text-slate-500 line-through tabular-nums">
+                                      {metric.beforeRate}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <ArrowRight size={14} className="text-[#5455EE] flex-shrink-0" />
+
+                                <div>
+                                  <span className="text-xs font-medium leading-[18px] text-emerald-700 block uppercase">
+                                    Current / After
+                                  </span>
+                                  {editingMetricsPlanId === plan.id ? (
+                                    <input
+                                      type="text"
+                                      value={metric.afterRate}
+                                      onChange={(e) =>
+                                        handleUpdateMetricRate(plan.id, metric.id, 'afterRate', e.target.value)
+                                      }
+                                      className="w-16 bg-white border border-emerald-400 rounded px-1 py-0.5 text-xs font-bold text-emerald-700"
+                                    />
+                                  ) : (
+                                    <span className="text-xl font-semibold leading-7 text-slate-900 tabular-nums">
+                                      {metric.afterRate}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <p className="text-xs font-normal leading-[18px] text-slate-500">
+                                {metric.details}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 2. LINKED EMPLOYEE FEEDBACK & EVIDENCE SECTION */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border border-amber-200/80 flex flex-col gap-3 shadow-2xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-amber-200/60">
+                          <div className="flex items-center gap-2">
+                            <Quote size={16} className="text-amber-800" />
+                            <h4 className="text-base font-semibold leading-6 text-slate-900">
+                              Linked Employee Case & Qualitative Voice
+                            </h4>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-amber-900 font-mono leading-[18px]">
+                              Source: {plan.linkedConcern} · {plan.linkedReport || 'R004'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEvidence(plan.linkedConcern)}
+                              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm leading-5 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            >
+                              <Layers size={12} />
+                              <span>View Evidence Modal</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Employee Feedback Quote */}
+                        <div className="p-3.5 rounded-xl bg-white border border-amber-200/60 text-sm font-normal leading-[22px] text-slate-800">
+                          "{plan.anonymizedSummary}"
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs font-normal leading-[18px] text-slate-600">
+                          <span className="flex items-center gap-1">
+                            <ShieldAlert size={12} className="text-[#5455EE]" />
+                            <span>Privacy Mode: Department-Level Visible (Identity Stripped)</span>
+                          </span>
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEvidenceForConcern(plan.linkedConcern);
-                            }}
-                            className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 underline cursor-pointer"
-                            title="Open Evidence Modal for this concern"
+                            onClick={() => handleNavigateToConcern(plan.linkedConcern, false)}
+                            className="text-[#5455EE] font-medium text-sm leading-5 hover:underline flex items-center gap-1 cursor-pointer"
                           >
-                            Evidence
+                            <span>Inspect Concern Card on Dashboard</span>
+                            <ExternalLink size={11} />
                           </button>
                         </div>
-                      </td>
+                      </div>
 
-                      {/* 3. Owner */}
-                      <td className="py-3.5 px-3 font-semibold text-slate-800">
-                        <div className="flex items-center gap-1.5">
-                          <User size={13} className="text-slate-400" />
-                          <span>{plan.owner}</span>
+                      {/* 3. DIRECT EDIT & PLAN TRACKING CONTROLS */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-[#F8F9FD] border border-slate-200 flex flex-col gap-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                          <div className="flex items-center gap-2">
+                            <Edit3 size={15} className="text-[#5455EE]" />
+                            <h4 className="text-base font-semibold leading-6 text-slate-900">
+                              Edit Action Plan Details & Next Steps
+                            </h4>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSavePlanChanges(plan.id)}
+                            className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white font-medium text-sm leading-5 shadow-xs flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Check size={14} />
+                            <span>Save Changes</span>
+                          </button>
                         </div>
-                      </td>
 
-                      {/* 4. Department */}
-                      <td className="py-3.5 px-3 text-slate-600 font-medium">
-                        <div className="flex items-center gap-1">
-                          <Building2 size={13} className="text-slate-400" />
-                          <span>{plan.department}</span>
-                        </div>
-                      </td>
-
-                      {/* 5. Due date */}
-                      <td className="py-3.5 px-3 font-semibold text-slate-800 whitespace-nowrap">
-                        {plan.dueDate || plan.due}
-                      </td>
-
-                      {/* 6. Status */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getStatusBadge(
-                            plan.status
-                          )}`}
-                        >
-                          {plan.status}
-                        </span>
-                      </td>
-
-                      {/* 7. Progress */}
-                      <td className="py-3.5 px-3 min-w-[120px]">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                plan.progress === 100
-                                  ? 'bg-emerald-500'
-                                  : plan.progress >= 50
-                                  ? 'bg-[#5455EE]'
-                                  : 'bg-amber-500'
-                              }`}
-                              style={{ width: `${plan.progress}%` }}
+                        {/* Form Inputs Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                          {/* Title */}
+                          <div className="lg:col-span-2 flex flex-col gap-1">
+                            <label className="text-sm font-medium leading-5 text-slate-700">Action Plan Title</label>
+                            <input
+                              type="text"
+                              value={draft.title}
+                              onChange={(e) => handleDraftChange(plan.id, 'title', e.target.value)}
+                              className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
                             />
                           </div>
-                          <span className="font-bold text-[11px] text-slate-700 w-8 text-right">
-                            {plan.progress}%
-                          </span>
-                        </div>
-                      </td>
 
-                      {/* 8. Last update */}
-                      <td className="py-3.5 px-3 text-slate-500 text-[11px] whitespace-nowrap">
-                        {plan.lastUpdate}
-                      </td>
+                          {/* Owner */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium leading-5 text-slate-700">Owner</label>
+                            <input
+                              type="text"
+                              value={draft.owner}
+                              onChange={(e) => handleDraftChange(plan.id, 'owner', e.target.value)}
+                              className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                            />
+                          </div>
 
-                      {/* 9. Actions (View details / Review update / Send reminder) */}
-                      <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectPlan(plan.id, true);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
-                            title="View details"
-                          >
-                            View details
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectPlan(plan.id, true);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
-                            title="Review update"
-                          >
-                            Review update
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendReminder(plan.id, plan.owner);
-                            }}
-                            className="p-1 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
-                            title={`Send reminder to ${plan.owner}`}
-                            aria-label={`Send reminder to ${plan.owner}`}
-                          >
-                            <BellRing size={14} />
-                          </button>
+                          {/* Department */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium leading-5 text-slate-700">Department</label>
+                            <select
+                              value={draft.department}
+                              onChange={(e) => handleDraftChange(plan.id, 'department', e.target.value)}
+                              className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                            >
+                              <option value="Engineering">Engineering</option>
+                              <option value="Product">Product & Design</option>
+                              <option value="Sales & Marketing">Sales & Marketing</option>
+                              <option value="Customer Operations">Customer Operations</option>
+                              <option value="Operations">Operations</option>
+                            </select>
+                          </div>
+
+                          {/* Due Date */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium leading-5 text-slate-700">Due Date</label>
+                            <input
+                              type="text"
+                              value={draft.dueDate}
+                              onChange={(e) => handleDraftChange(plan.id, 'dueDate', e.target.value)}
+                              className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                            />
+                          </div>
+
+                          {/* Status */}
+                          <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium leading-5 text-slate-700">Status</label>
+                            <select
+                              value={draft.status}
+                              onChange={(e) => handleDraftChange(plan.id, 'status', e.target.value)}
+                              className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                            >
+                              <option value="In progress">In progress</option>
+                              <option value="Awaiting manager update">Awaiting manager update</option>
+                              <option value="Monitoring">Monitoring</option>
+                              <option value="Completed">Completed</option>
+                              <option value="Escalated">Escalated</option>
+                            </select>
+                          </div>
+
+                          {/* Progress Slider */}
+                          <div className="lg:col-span-2 flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium leading-5 text-slate-700">Execution Progress</label>
+                              <span className="text-sm font-semibold text-[#5455EE] tabular-nums leading-5">{draft.progress}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="5"
+                              value={draft.progress}
+                              onChange={(e) =>
+                                handleDraftChange(plan.id, 'progress', parseInt(e.target.value, 10))
+                              }
+                              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#5455EE]"
+                            />
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+
+                        {/* Manager Update Note */}
+                        <div className="flex flex-col gap-1.5 pt-2">
+                          <label className="text-sm font-medium leading-5 text-slate-700">Manager Progress Update Note</label>
+                          <textarea
+                            rows={2}
+                            value={draft.managerUpdate}
+                            onChange={(e) => handleDraftChange(plan.id, 'managerUpdate', e.target.value)}
+                            placeholder="Add or update manager's implementation notes..."
+                            className="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm font-normal leading-[22px] text-slate-800 outline-none focus:border-[#5455EE]"
+                          />
+                        </div>
+
+                        {/* HR Review Decision Buttons */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => handleApproveActionPlan(plan.id)}
+                              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm leading-5 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            >
+                              <CheckCircle2 size={13} className="text-emerald-400" />
+                              <span>Approve to Monitoring</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveRevisionPlanId(plan.id);
+                                setRevisionModalOpen(true);
+                              }}
+                              className="px-3.5 py-2 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-medium text-sm leading-5 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            >
+                              <RotateCcw size={13} className="text-amber-800" />
+                              <span>Request Revision</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveEscalatePlanId(plan.id);
+                                setEscalateModalOpen(true);
+                              }}
+                              className="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-medium text-sm leading-5 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            >
+                              <AlertTriangle size={13} className="text-rose-600" />
+                              <span>Escalate</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendReminder(plan.id, draft.owner)}
+                              className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium text-sm leading-5 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            >
+                              <BellRing size={13} className="text-[#5455EE]" />
+                              <span>Send Reminder</span>
+                            </button>
+                          </div>
+
+                          <div className="text-xs font-normal leading-[18px] text-slate-500">
+                            Last edited: {plan.lastUpdate || '23 Oct 2026'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* 3. ACTION PLAN DETAIL VIEW */}
-      {currentPlan && (
+      {/* 4. MODALS */}
+
+      {/* ADD CUSTOM METRIC MODAL */}
+      {showAddMetricModal && (
         <div
-          ref={detailViewRef}
-          className="bg-white border-2 border-[#5455EE]/30 rounded-3xl p-6 sm:p-7 shadow-card flex flex-col gap-6 animate-in fade-in duration-200 relative overflow-hidden"
+          onClick={() => setShowAddMetricModal(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
         >
-          {/* Top Decorative Indigo Border Line */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#5455EE] via-[#7B7DF6] to-[#A5B4FC]" />
-
-          {/* Detail View Header */}
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-slate-100">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-[#5455EE] text-white shadow-2xs">
-                  {currentPlan.id}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span
-                  className={`text-xs font-extrabold px-3 py-1 rounded-full border ${getStatusBadge(
-                    currentPlan.status
-                  )}`}
-                >
-                  {currentPlan.status}
-                </span>
-                <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full border ${getPriorityBadge(
-                    currentPlan.priority
-                  )}`}
-                >
-                  {currentPlan.priority} Priority
-                </span>
-                <span className="text-slate-400 text-xs">
-                  Created {currentPlan.created}
-                </span>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {currentPlan.title}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-xl font-semibold leading-7 text-slate-900">
+                Add Outcome Tracking Metric
               </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddMetricModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-              {/* Linked Concern Interactive Connection */}
-              <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                  Linked Concern:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleNavigateToConcern(currentPlan.linkedConcern, false)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#EEF0FF] hover:bg-[#E0E4FF] text-[#5455EE] border border-[#5455EE]/30 font-bold text-xs transition-colors cursor-pointer group"
-                  title="Navigate back to Dashboard concern card"
-                >
-                  <span>{currentPlan.linkedConcern}: {currentPlan.linkedConcernTitle}</span>
-                  <ExternalLink size={12} className="group-hover:translate-x-0.5 transition-transform" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openEvidenceForConcern(currentPlan.linkedConcern)}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-2xs cursor-pointer"
-                  title="Inspect all signal evidence in modal"
-                >
-                  <Layers size={12} />
-                  <span>View Evidence Modal</span>
-                </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium leading-5 text-slate-700">Metric Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. PR Review SLA, On-call Incident Count"
+                  value={newMetricForm.label}
+                  onChange={(e) => setNewMetricForm({ ...newMetricForm, label: e.target.value })}
+                  className="p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium leading-5 text-slate-700">Rate Before Action</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 96h, 18%"
+                    value={newMetricForm.beforeRate}
+                    onChange={(e) => setNewMetricForm({ ...newMetricForm, beforeRate: e.target.value })}
+                    className="p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium leading-5 text-slate-700">Current / Target Rate</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 24h, 6%"
+                    value={newMetricForm.afterRate}
+                    onChange={(e) => setNewMetricForm({ ...newMetricForm, afterRate: e.target.value })}
+                    className="p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium leading-5 text-slate-700">Trend / Recovery Badge</label>
+                <input
+                  type="text"
+                  placeholder="e.g. -75% turnaround, Positive Recovery"
+                  value={newMetricForm.change}
+                  onChange={(e) => setNewMetricForm({ ...newMetricForm, change: e.target.value })}
+                  className="p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-sm font-normal text-slate-900 outline-none focus:border-[#5455EE] leading-[22px]"
+                />
               </div>
             </div>
 
-            {/* Quick Metadata Box: Owner, Dept, Due, Progress */}
-            <div className="grid grid-cols-2 gap-2.5 bg-[#F8F9FD] p-3.5 rounded-2xl border border-slate-200/80 min-w-[280px]">
-              <div>
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
-                  Action Owner
-                </span>
-                <span className="font-bold text-slate-900 text-xs flex items-center gap-1 mt-0.5">
-                  <User size={13} className="text-[#5455EE]" />
-                  {currentPlan.owner}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
-                  Department
-                </span>
-                <span className="font-bold text-slate-900 text-xs flex items-center gap-1 mt-0.5">
-                  <Building2 size={13} className="text-[#5455EE]" />
-                  {currentPlan.department}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
-                  Deadline
-                </span>
-                <span className="font-bold text-slate-900 text-xs flex items-center gap-1 mt-0.5">
-                  <Calendar size={13} className="text-[#5455EE]" />
-                  {currentPlan.dueDate || currentPlan.due}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
-                  Overall Progress
-                </span>
-                <span className="font-extrabold text-[#5455EE] text-xs flex items-center gap-1 mt-0.5">
-                  <Activity size={13} className="text-[#5455EE]" />
-                  {currentPlan.progress}% Complete
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Anonymized Concern Summary */}
-          <div className="p-4 rounded-2xl bg-[#F8F9FD] border border-slate-200/90 flex flex-col gap-1.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <ShieldAlert size={14} className="text-[#5455EE]" />
-                <span>Anonymized Concern Summary</span>
-              </span>
-              <span className="text-[11px] font-bold text-slate-400 font-mono">
-                Source: {currentPlan.linkedConcern} · {currentPlan.linkedReport || 'R004'}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
-              {currentPlan.anonymizedSummary}
-            </p>
-          </div>
-
-          {/* Manager Progress Update & HR Review Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-            {/* Left 2 Cols: Manager Progress Update Box */}
-            <div className="lg:col-span-2 p-5 rounded-2xl bg-amber-50/60 border border-amber-200/80 shadow-2xs flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs">
-                    DL
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900">
-                      Manager Progress Update — {currentPlan.owner}
-                    </h4>
-                    <span className="text-[11px] text-slate-500">
-                      Submitted on {currentPlan.managerUpdateDate || '23 Oct 2026, 14:30'}
-                    </span>
-                  </div>
-                </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                  Awaiting HR Review
-                </span>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white border border-amber-200/60 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium shadow-2xs">
-                “{currentPlan.managerUpdate}”
-              </div>
-
-              <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-600" />
-                <span>Action items verified against Engineering sprint backlog</span>
-              </div>
-            </div>
-
-            {/* Right 1 Col: HR Review Buttons (Approve / Request Revision / Escalate) */}
-            <div className="p-5 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col gap-3.5">
-              <div>
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                  HR Review Decisions
-                </h4>
-                <p className="text-xs text-slate-600 mt-0.5">
-                  Assess manager implementation and progress adherence.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {/* 1. Approve and move to monitoring */}
-                <button
-                  type="button"
-                  onClick={() => handleApproveActionPlan(currentPlan.id)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-between cursor-pointer group"
-                >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 size={14} className="text-emerald-400" />
-                    <span>Approve and move to monitoring</span>
-                  </span>
-                  <ArrowRight size={13} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-
-                {/* 2. Request revision */}
-                <button
-                  type="button"
-                  onClick={() => setRevisionModalOpen(true)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-bold text-xs shadow-2xs transition-all flex items-center justify-between cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <RotateCcw size={14} className="text-amber-800" />
-                    <span>Request revision</span>
-                  </span>
-                  <ChevronRight size={13} className="text-amber-800" />
-                </button>
-
-                {/* 3. Escalate */}
-                <button
-                  type="button"
-                  onClick={() => setEscalateModalOpen(true)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-bold text-xs shadow-2xs transition-all flex items-center justify-between cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <AlertTriangle size={14} className="text-rose-600" />
-                    <span>Escalate</span>
-                  </span>
-                  <ChevronRight size={13} className="text-rose-500" />
-                </button>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                <span>HR Partner: Sarah Jenkins</span>
-                <span>SLA: 48h</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Items List */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <ListTodo size={14} className="text-[#5455EE]" />
-                <span>Action Items Execution Status</span>
-              </h4>
-              <span className="text-[11px] font-bold text-slate-500">
-                {currentPlan.actionItems?.filter((a) => a.completed).length || 0} of{' '}
-                {currentPlan.actionItems?.length || 0} completed
-              </span>
-            </div>
-
-            <div className="border border-[#EBECEF] rounded-2xl overflow-hidden divide-y divide-slate-100 bg-white">
-              {currentPlan.actionItems?.map((act) => (
-                <div
-                  key={act.id}
-                  className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-[#F8F9FD] transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center mt-0.5 flex-shrink-0 ${
-                        act.completed
-                          ? 'bg-emerald-500 text-white'
-                          : 'border-2 border-slate-300 text-transparent'
-                      }`}
-                    >
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <div className="flex flex-col">
-                      <span
-                        className={`text-xs sm:text-sm font-bold ${
-                          act.completed ? 'text-slate-900 line-through opacity-80' : 'text-slate-900'
-                        }`}
-                      >
-                        {act.title}
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        Owner: {act.owner} · Due {act.due}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span
-                    className={`self-start sm:self-auto text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                      act.completed
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-50 text-amber-800 border-amber-200'
-                    }`}
-                  >
-                    {act.completed ? 'Completed' : act.status || 'In progress'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* OUTCOME TRACKING SECTION: 5 Key Indicators */}
-          <div className="flex flex-col gap-3 pt-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold text-[#5455EE] uppercase tracking-wider flex items-center gap-1.5">
-                <TrendingUp size={14} />
-                <span>Outcome Tracking & Disengagement Recovery Signals</span>
-              </h4>
-              <span className="text-[11px] font-bold text-slate-400">
-                Live automated telemetry since action plan assignment
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-              {/* 1. Related EkoAI patterns */}
-              <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">
-                    EkoAI Patterns
-                  </span>
-                  <Bot size={15} className="text-amber-800" />
-                </div>
-                <div className="mt-2">
-                  <div className="text-base font-black text-slate-900">
-                    {currentPlan.outcomeTracking?.ekoAiPatterns?.trend || 'Reduced 6 → 2'}
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block mt-1">
-                    {currentPlan.outcomeTracking?.ekoAiPatterns?.change || '-67% friction'}
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
-                    {currentPlan.outcomeTracking?.ekoAiPatterns?.details}
-                  </p>
-                </div>
-              </div>
-
-              {/* 2. New reports */}
-              <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">
-                    New Reports
-                  </span>
-                  <MessageSquare size={15} className="text-[#5455EE]" />
-                </div>
-                <div className="mt-2">
-                  <div className="text-base font-black text-slate-900">
-                    {currentPlan.outcomeTracking?.newReports?.trend || '0 new reports'}
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block mt-1">
-                    Past 14 days clean
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
-                    {currentPlan.outcomeTracking?.newReports?.details}
-                  </p>
-                </div>
-              </div>
-
-              {/* 3. Community activity */}
-              <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">
-                    Community Activity
-                  </span>
-                  <Users size={15} className="text-purple-600" />
-                </div>
-                <div className="mt-2">
-                  <div className="text-base font-black text-slate-900">
-                    {currentPlan.outcomeTracking?.communityActivity?.trend || 'Thread cooled'}
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 inline-block mt-1">
-                    Positive feedback
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
-                    {currentPlan.outcomeTracking?.communityActivity?.details}
-                  </p>
-                </div>
-              </div>
-
-              {/* 4. Pulse trend */}
-              <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">
-                    Pulse Trend
-                  </span>
-                  <TrendingUp size={15} className="text-emerald-600" />
-                </div>
-                <div className="mt-2">
-                  <div className="text-base font-black text-slate-900">
-                    {currentPlan.outcomeTracking?.pulseTrend?.trend || '2.8 → 3.4 / 5'}
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block mt-1">
-                    {currentPlan.outcomeTracking?.pulseTrend?.change || '+21% recovery'}
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
-                    {currentPlan.outcomeTracking?.pulseTrend?.details}
-                  </p>
-                </div>
-              </div>
-
-              {/* 5. Operational indicators */}
-              <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs flex flex-col justify-between hover:border-[#5455EE]/40 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-slate-400 uppercase">
-                    Operational Signals
-                  </span>
-                  <Activity size={15} className="text-[#5455EE]" />
-                </div>
-                <div className="mt-2">
-                  <div className="text-base font-black text-slate-900">
-                    {currentPlan.outcomeTracking?.operationalIndicators?.trend || 'Overtime +18% → +6%'}
-                  </div>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block mt-1">
-                    0 JIRO collisions
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-1.5 leading-snug">
-                    {currentPlan.outcomeTracking?.operationalIndicators?.details}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowAddMetricModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAddCustomMetric(expandedPlanId || 'AP-01')}
+                className="px-4 py-2 rounded-xl bg-[#5455EE] hover:bg-[#4344dd] text-white text-sm font-medium leading-5 shadow-xs"
+              >
+                Add Metric
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Revision Request Modal */}
+      {/* REVISION REQUEST MODAL */}
       {revisionModalOpen && (
         <div
           onClick={() => setRevisionModalOpen(false)}
@@ -950,60 +1126,55 @@ export default function ActionsFollowUpView() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 flex flex-col gap-4 text-xs"
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95 duration-150"
           >
-            <div className="flex items-center gap-3 text-amber-700">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center flex-shrink-0 border border-amber-200">
-                <RotateCcw size={20} />
-              </div>
-              <div>
-                <h4 className="text-base font-extrabold text-slate-900">
-                  Request Revision from {currentPlan.owner}
-                </h4>
-                <p className="text-slate-500 text-[11px] mt-0.5">
-                  Plan: {currentPlan.id} — {currentPlan.title}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-slate-600 leading-relaxed">
-              Provide constructive guidance for the manager regarding what needs adjustment before this action plan can move to monitoring.
-            </p>
-
-            <textarea
-              rows={4}
-              value={revisionNote}
-              onChange={(e) => setRevisionNote(e.target.value)}
-              placeholder="e.g. Please clarify how senior documentation responsibilities will be rescheduled and ensure check-in dates are confirmed with the squad leads..."
-              className="w-full bg-[#F8F9FD] border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-800 outline-none focus:border-[#5455EE]"
-            />
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-xl font-semibold leading-7 text-slate-900">
+                Request Manager Revision
+              </h3>
               <button
                 type="button"
                 onClick={() => setRevisionModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm font-normal leading-[22px] text-slate-600">
+              Ask the action owner to refine task allocation thresholds, add concrete timeline deliverables, or clarify delegation checkpoints.
+            </p>
+
+            <textarea
+              rows={3}
+              placeholder="Specify requested revision details for the manager..."
+              className="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 text-sm font-normal leading-[22px] text-slate-800 outline-none focus:border-[#5455EE]"
+            />
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setRevisionModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:bg-slate-100"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  handleRequestRevision(currentPlan.id);
+                  handleRequestRevision(activeRevisionPlanId || 'AP-01');
                   setRevisionModalOpen(false);
-                  setRevisionNote('');
                 }}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium leading-5 shadow-xs"
               >
-                <Send size={13} />
-                <span>Send Revision Request</span>
+                Send Revision Request
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Escalate Confirmation Modal */}
+      {/* ESCALATE MODAL */}
       {escalateModalOpen && (
         <div
           onClick={() => setEscalateModalOpen(false)}
@@ -1011,56 +1182,56 @@ export default function ActionsFollowUpView() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 flex flex-col gap-4 text-xs"
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95 duration-150"
           >
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0 border border-rose-200">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <h4 className="text-base font-extrabold text-slate-900">
-                  Escalate Action Plan?
-                </h4>
-                <p className="text-slate-500 text-[11px] mt-0.5">
-                  Plan: {currentPlan.id} · Department: {currentPlan.department}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-slate-700 leading-relaxed text-xs">
-              Escalating this plan notifies the Head of Department and HR Leadership to intervene directly. The confidential reporter's identity will continue to be strictly protected.
-            </p>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-xl font-semibold leading-7 text-slate-900">
+                Escalate Action Plan
+              </h3>
               <button
                 type="button"
                 onClick={() => setEscalateModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm font-normal leading-[22px] text-slate-600">
+              Escalate this plan to the Head of Department (VP of Engineering / Product) for immediate structural capacity intervention.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEscalateModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:bg-slate-100"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  handleEscalateActionPlan(currentPlan.id);
+                  handleEscalateActionPlan(activeEscalatePlanId || 'AP-01');
                   setEscalateModalOpen(false);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium leading-5 shadow-xs"
               >
-                <AlertTriangle size={14} />
-                <span>Confirm Escalation</span>
+                Confirm Escalation
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Evidence Modal for Linked Concern */}
-      <EvidenceModal
-        isOpen={Boolean(evidenceConcern)}
-        onClose={() => setEvidenceConcern(null)}
-        concern={evidenceConcern}
-      />
+      {/* RAW SIGNAL EVIDENCE MODAL */}
+      {evidenceConcern && (
+        <EvidenceModal
+          isOpen={!!evidenceConcern}
+          onClose={() => setEvidenceConcern(null)}
+          concern={evidenceConcern}
+        />
+      )}
     </div>
   );
 }

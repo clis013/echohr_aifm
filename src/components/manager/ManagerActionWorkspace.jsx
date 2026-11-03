@@ -193,12 +193,12 @@ export default function ManagerActionWorkspace({
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
       {/* 1. Subtitle & Context Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EBECEF] pb-4">
-        <p className="text-xs sm:text-sm text-slate-500">
+        <p className="text-sm font-normal leading-[22px] text-slate-500">
           Assigned corrective action plans for <strong className="text-slate-900 font-bold">Daniel Lim</strong> · Engineering Manager
         </p>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EBECEF] text-xs font-semibold text-slate-600 shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EBECEF] text-xs font-medium leading-[18px] text-slate-600 shadow-2xs">
             <ShieldAlert size={14} className="text-[#5455EE]" />
             <span>Reporter Confidentiality Protected: Anonymized Concerns Only</span>
           </div>
@@ -208,52 +208,52 @@ export default function ManagerActionWorkspace({
       {/* 2. Top Metric Cards (Like Report List Page) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
         <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
             Total Assigned Plans
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">
+            <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">
               {assignedRecords.length}
             </span>
-            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+            <span className="text-xs font-medium leading-[18px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
               Engineering
             </span>
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
             In Progress
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-amber-600">
+            <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-amber-600">
               {assignedRecords.filter((r) => r.status === 'In progress').length}
             </span>
-            <span className="text-[11px] text-slate-500">Active Execution</span>
+            <span className="text-xs font-normal leading-[18px] text-slate-500">Active Execution</span>
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
             Completed Actions
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-600">
+            <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">
               {assignedRecords.filter((r) => r.status === 'Completed').length}
             </span>
-            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+            <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
               Resolved
             </span>
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
             Next Deadline
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">30 Oct</span>
-            <span className="text-[11px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md">
+            <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">30 Oct</span>
+            <span className="text-xs font-medium leading-[18px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
               AP-01
             </span>
           </div>
@@ -269,7 +269,7 @@ export default function ManagerActionWorkspace({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search assigned actions by ID, concern, or keyword..."
-            className="w-full bg-[#F8F9FD] border border-slate-200/90 rounded-xl pl-9 pr-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-[#5455EE] transition-all"
+            className="w-full bg-[#F8F9FD] border border-slate-200/90 rounded-xl pl-9 pr-3.5 py-2 text-sm font-normal text-slate-800 placeholder-slate-400 outline-none focus:border-[#5455EE] transition-all leading-5"
           />
         </div>
 
@@ -282,7 +282,7 @@ export default function ManagerActionWorkspace({
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium leading-5 transition-all cursor-pointer ${
                 statusFilter === tab.id
                   ? 'bg-white text-slate-900 shadow-2xs'
                   : 'text-slate-500 hover:text-slate-900'
@@ -299,7 +299,7 @@ export default function ManagerActionWorkspace({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-[#EBECEF] text-[11px] font-extrabold text-slate-400 uppercase tracking-wider bg-[#F8F9FD]/80">
+              <tr className="border-b border-[#EBECEF] text-xs font-medium text-slate-500 uppercase tracking-wider bg-[#F8F9FD] leading-[18px]">
                 <th className="p-4 rounded-tl-3xl whitespace-nowrap">Action Plan ID</th>
                 <th className="p-4 whitespace-nowrap">Concern Theme</th>
                 <th className="p-4 min-w-[200px]">Anonymized Concern</th>
@@ -325,23 +325,23 @@ export default function ManagerActionWorkspace({
                     className="hover:bg-[#F8F9FD] transition-colors cursor-pointer group"
                   >
                     <td className="p-4 whitespace-nowrap">
-                      <span className="font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-[#5455EE] text-white shadow-2xs">
+                      <span className="font-mono font-medium text-xs px-2.5 py-1 rounded-lg bg-[#5455EE] text-white shadow-2xs tracking-wider">
                         Action {record.id}
                       </span>
                     </td>
 
-                    <td className="p-4 font-bold text-slate-900 whitespace-nowrap">
+                    <td className="p-4 font-semibold text-sm leading-5 text-slate-900 whitespace-nowrap">
                       {record.concernTheme}
                     </td>
 
                     <td className="p-4">
-                      <p className="text-slate-700 leading-snug line-clamp-2 font-medium">
+                      <p className="text-slate-700 leading-[22px] line-clamp-2 text-sm font-normal">
                         {record.anonymizedConcern}
                       </p>
                     </td>
 
                     <td className="p-4">
-                      <ul className="text-slate-600 list-disc pl-4 space-y-0.5 line-clamp-2">
+                      <ul className="text-slate-600 list-disc pl-4 space-y-1 line-clamp-2 text-sm font-normal leading-[22px]">
                         {record.requestedActions.map((act, i) => (
                           <li key={i} className="truncate">
                             {act}
@@ -352,7 +352,7 @@ export default function ManagerActionWorkspace({
 
                     <td className="p-4 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
+                        className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${
                           record.priority === 'High'
                             ? 'bg-rose-50 text-rose-700 border border-rose-200'
                             : 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -362,13 +362,13 @@ export default function ManagerActionWorkspace({
                       </span>
                     </td>
 
-                    <td className="p-4 whitespace-nowrap font-semibold text-slate-800">
+                    <td className="p-4 whitespace-nowrap font-medium text-sm leading-5 text-slate-800">
                       {record.dueDate}
                     </td>
 
                     <td className="p-4 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] border ${
+                        className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] border ${
                           record.status === 'Completed'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-amber-50 text-amber-800 border-amber-200'
@@ -385,7 +385,7 @@ export default function ManagerActionWorkspace({
                           e.stopPropagation();
                           openPlanModal(record);
                         }}
-                        className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-2xs group-hover:shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                        className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm leading-5 transition-all shadow-2xs group-hover:shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                       >
                         <span>Update & Review</span>
                         <ChevronRight size={13} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
@@ -416,7 +416,7 @@ export default function ManagerActionWorkspace({
                   Action {selectedPlanModal.id}
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">•</span>
-                <span className="text-sm font-extrabold text-slate-800">
+                <span className="text-xl font-semibold leading-7 text-slate-900">
                   {selectedPlanModal.concernTheme}
                 </span>
               </div>
@@ -434,20 +434,20 @@ export default function ManagerActionWorkspace({
             <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs text-slate-800 bg-[#F8F9FD]">
               {/* Anonymized Concern */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-1.5">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Anonymized concern
                 </span>
-                <p className="text-xs sm:text-sm text-slate-900 leading-relaxed font-bold">
+                <p className="text-sm font-normal leading-[22px] text-slate-900">
                   {selectedPlanModal.anonymizedConcern}
                 </p>
               </div>
 
               {/* Requested actions (Numbered 1, 2, 3) */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-2">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                   Requested actions
                 </span>
-                <ol className="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
+                <ol className="list-decimal pl-5 space-y-1.5 text-sm font-normal leading-[22px] text-slate-800">
                   {selectedPlanModal.requestedActions.map((act, i) => (
                     <li key={i} className="pl-1">
                       {act}
@@ -463,10 +463,10 @@ export default function ManagerActionWorkspace({
                     <Calendar size={16} />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    <span className="text-xs font-normal text-slate-500 uppercase leading-[18px] block">
                       Due date
                     </span>
-                    <span className="font-bold text-slate-900 text-xs">
+                    <span className="font-medium text-slate-900 text-sm leading-5">
                       {selectedPlanModal.dueDate}
                     </span>
                   </div>
@@ -477,10 +477,10 @@ export default function ManagerActionWorkspace({
                     <Clock size={16} />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    <span className="text-xs font-normal text-slate-500 uppercase leading-[18px] block">
                       Priority
                     </span>
-                    <span className="font-bold text-rose-700 text-xs">
+                    <span className="font-medium text-rose-700 text-sm leading-5">
                       {selectedPlanModal.priority}
                     </span>
                   </div>
@@ -490,10 +490,10 @@ export default function ManagerActionWorkspace({
               {/* Progress Update */}
               <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px] block">
                     Progress update
                   </span>
-                  <span className="text-[10px] font-medium text-slate-400">
+                  <span className="text-xs font-normal leading-[18px] text-slate-500">
                     Saves to HR Actions & Follow-up
                   </span>
                 </div>
@@ -502,7 +502,7 @@ export default function ManagerActionWorkspace({
                   value={modalProgressText}
                   onChange={(e) => setModalProgressText(e.target.value)}
                   placeholder="Describe what you did, when, and any obstacles."
-                  className="w-full bg-[#F8F9FD] border border-slate-200 rounded-xl p-3.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 leading-relaxed outline-none focus:border-[#5455EE] focus:bg-white transition-all shadow-inner"
+                  className="w-full bg-[#F8F9FD] border border-slate-200 rounded-xl p-3.5 text-sm font-normal leading-[22px] text-slate-800 placeholder-slate-400 outline-none focus:border-[#5455EE] focus:bg-white transition-all shadow-inner"
                 />
               </div>
             </div>
@@ -512,7 +512,7 @@ export default function ManagerActionWorkspace({
               <button
                 type="button"
                 onClick={() => setSelectedPlanModal(null)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-sm font-medium leading-5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 bg-white transition-colors cursor-pointer"
               >
                 Close
               </button>
@@ -521,7 +521,7 @@ export default function ManagerActionWorkspace({
                 <button
                   type="button"
                   onClick={() => handleSaveProgress(selectedPlanModal.id)}
-                  className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-medium text-sm leading-5 shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <Save size={14} />
                   <span>Save progress</span>
@@ -530,7 +530,7 @@ export default function ManagerActionWorkspace({
                 <button
                   type="button"
                   onClick={() => handleMarkComplete(selectedPlanModal.id)}
-                  className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer group"
+                  className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm leading-5 shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer group"
                 >
                   <CheckCircle2 size={14} className="text-emerald-400" />
                   <span>Mark complete</span>

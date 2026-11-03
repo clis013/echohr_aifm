@@ -5,6 +5,7 @@ import EvidenceModal from './EvidenceModal';
 import { useApp } from '../../context/AppContext';
 import {
   ChevronDown,
+  ChevronUp,
   Filter,
   CheckCircle2,
   ClipboardCheck,
@@ -413,6 +414,7 @@ export default function PriorityConcerns({
   onActionPlanClick,
   onLaunchPlan,
   onViewReports,
+  isExpandedView = false,
 }) {
   const {
     actionPlans,
@@ -428,18 +430,28 @@ export default function PriorityConcerns({
   const [expandedId, setExpandedId] = useState(null);
   const [selectedEvidenceConcern, setSelectedEvidenceConcern] = useState(null);
 
-  // Sync expandedConcernId when navigated from Actions & Follow-up
+  // Sync expandedConcernId when navigated from Actions & Follow-up or parent
   useEffect(() => {
     if (expandedConcernId) {
       setExpandedId(expandedConcernId);
       setTimeout(() => {
         const el = document.getElementById(`concern-${expandedConcernId}`);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       }, 150);
+    } else {
+      setExpandedId(null);
     }
   }, [expandedConcernId]);
+
+  const handleToggleExpand = (item) => {
+    const nextId = expandedId === item.id ? null : item.id;
+    setExpandedId(nextId);
+    if (setExpandedConcernId) {
+      setExpandedConcernId(nextId);
+    }
+  };
 
   // Filter list
   let filtered = concerns;
@@ -467,23 +479,50 @@ export default function PriorityConcerns({
     }
   };
 
+  const hasExpandedCard = Boolean(expandedId);
+
   return (
-    <div className="bg-white border border-[#EBECEF] rounded-3xl p-5 sm:p-6 shadow-card hover:border-[#5455EE]/30 transition-all flex flex-col gap-5">
+    <div
+      className={`bg-white border rounded-3xl p-5 sm:p-6 shadow-card transition-all flex flex-col gap-5 ${
+        hasExpandedCard
+          ? 'border-[#5455EE]/40 ring-2 ring-[#5455EE]/10'
+          : 'border-[#EBECEF] hover:border-[#5455EE]/30'
+      }`}
+    >
       {/* 1. Header with Title and Connected Filter Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h3 className="text-xl font-semibold text-slate-900 leading-7 tracking-tight">
             Disengagement Concerns & Distribution
           </h3>
+          {hasExpandedCard && (
+            <span className="text-xs font-medium leading-[18px] px-2.5 py-0.5 rounded-full bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/30 shadow-2xs">
+              Expanded View
+            </span>
+          )}
           {isDepartmentView && departmentName && (
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#F4F5FA] text-[#5455EE] border border-[#EBECEF]">
+            <span className="text-xs font-medium leading-[18px] px-2.5 py-0.5 rounded-full bg-[#F4F5FA] text-[#5455EE] border border-[#EBECEF]">
               {departmentName}
             </span>
           )}
         </div>
 
-        {/* Filter Controls Row */}
+        {/* Filter Controls Row + Collapse button when in expanded view */}
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          {hasExpandedCard && (
+            <button
+              type="button"
+              onClick={() => {
+                setExpandedId(null);
+                if (setExpandedConcernId) setExpandedConcernId(null);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium leading-5 transition-all cursor-pointer shadow-xs"
+              title="Collapse expanded view and return to standard overview layout"
+            >
+              <ChevronUp size={14} />
+              <span>Collapse</span>
+            </button>
+          )}
           {/* Active Theme Filter Tag */}
           {selectedCategoryFilter && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#EEF0FF] text-[#5455EE] border border-[#5455EE]/30 rounded-full text-xs font-bold animate-in fade-in">
@@ -639,10 +678,10 @@ export default function PriorityConcerns({
       {/* 3. Concerns Counter & Subtitle */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-700">
+          <span className="text-sm font-semibold leading-5 text-slate-800">
             Actionable Early Signals
           </span>
-          <span className="text-[11px] font-semibold text-slate-400">
+          <span className="text-xs font-normal leading-[18px] text-slate-500">
             ({filtered.length} {filtered.length === 1 ? 'concern' : 'concerns'})
           </span>
         </div>
@@ -654,7 +693,7 @@ export default function PriorityConcerns({
               setPriorityFilter('all');
               if (onClearCategoryFilter) onClearCategoryFilter();
             }}
-            className="text-xs font-semibold text-[#5455EE] hover:underline cursor-pointer"
+            className="text-xs font-medium text-[#5455EE] hover:underline cursor-pointer"
           >
             Reset all filters
           </button>
@@ -688,8 +727,8 @@ export default function PriorityConcerns({
               >
                 {/* Concern card (dropdown closed): Icon, id, concern theme, priority tag, short description */}
                 <div
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className="p-4 flex flex-col gap-1 cursor-pointer hover:bg-[#F8F9FD]/60 transition-colors"
+                  onClick={() => handleToggleExpand(item)}
+                  className="p-4 flex flex-col gap-1 cursor-pointer hover:bg-[#F8F9FD] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -704,11 +743,11 @@ export default function PriorityConcerns({
                       {/* ID and Concern Theme */}
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                          <span className="text-xs font-medium leading-[18px] text-slate-500 uppercase tracking-wider">
                             {item.code || item.id}
                           </span>
                         </div>
-                        <h4 className="text-base font-bold text-gray-900 leading-snug">
+                        <h4 className="text-base font-semibold leading-6 text-slate-900">
                           {item.title}
                         </h4>
                       </div>
@@ -717,7 +756,7 @@ export default function PriorityConcerns({
                     {/* Priority tag & Chevron */}
                     <div className="flex items-center gap-2 flex-shrink-0 mt-1">
                       <span
-                        className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getPriorityBadge(
+                        className={`text-xs font-medium leading-[18px] px-2.5 py-0.5 rounded-full border ${getPriorityBadge(
                           item.priority
                         )}`}
                       >
@@ -734,7 +773,7 @@ export default function PriorityConcerns({
 
                   {/* Short description (same as now) */}
                   {!isExpanded && (
-                    <p className="text-sm text-gray-600 leading-relaxed pr-6 mt-1.5 line-clamp-2 pl-[52px]">
+                    <p className="text-sm font-normal leading-[22px] text-slate-600 pr-6 mt-1.5 line-clamp-2 pl-[52px]">
                       {item.description || cat?.description}
                     </p>
                   )}
@@ -742,9 +781,9 @@ export default function PriorityConcerns({
 
                 {/* Concern card (dropdown open) */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 pt-3 border-t border-gray-100 bg-[#FAFAFC] text-gray-800 text-sm flex flex-col gap-4 animate-in fade-in duration-150">
+                  <div className="px-5 pb-5 pt-3 border-t border-gray-100 bg-[#FAFAFC] text-slate-800 text-sm flex flex-col gap-4 animate-in fade-in duration-150">
                     {/* 1. Direct description (no extra label, single clean description) */}
-                    <p className="text-sm text-gray-700 leading-relaxed pl-0.5">
+                    <p className="text-sm font-normal leading-[22px] text-slate-700 pl-0.5">
                       {item.description || cat?.description}
                     </p>
 
@@ -754,20 +793,20 @@ export default function PriorityConcerns({
                     <div className="flex flex-col gap-2 text-sm text-slate-700 pl-0.5">
                       <div className="flex items-center gap-6 flex-wrap">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-[#5455EE]">Detected:</span>
-                          <span className="text-slate-700">{item.detected || item.detectedWindow || 'Past 14 days'}</span>
+                          <span className="text-sm font-medium leading-5 text-[#5455EE]">Detected:</span>
+                          <span className="text-sm font-normal leading-5 text-slate-700">{item.detected || item.detectedWindow || 'Past 14 days'}</span>
                         </div>
 
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-bold text-[#5455EE]">Status:</span>
-                          <span className="text-slate-700">{item.status || 'Requires Investigation'}</span>
+                          <span className="text-sm font-medium leading-5 text-[#5455EE]">Status:</span>
+                          <span className="text-sm font-normal leading-5 text-slate-700">{item.status || 'Requires Investigation'}</span>
                         </div>
                       </div>
 
                       {/* Department affected: only shown in Organizational / All Departments view */}
                       {!isDepartmentView && (
                         <div className="flex items-start sm:items-center gap-2 flex-wrap">
-                          <span className="font-bold text-[#5455EE]">Department affected:</span>
+                          <span className="text-sm font-medium leading-5 text-[#5455EE]">Department affected:</span>
                           <div className="flex flex-wrap items-center gap-2">
                             {(
                               item.departmentsAffected || [
@@ -784,7 +823,7 @@ export default function PriorityConcerns({
                                     e.stopPropagation();
                                     if (onSelectDepartment) onSelectDepartment(deptInfo.deptKey);
                                   }}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-[#EEF0FF] text-slate-800 hover:text-[#5455EE] border border-slate-200 hover:border-[#5455EE]/40 text-xs font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-[#EEF0FF] text-slate-800 hover:text-[#5455EE] border border-slate-200 hover:border-[#5455EE]/40 text-xs font-medium leading-[18px] shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
                                   title={`Switch to ${deptInfo.name} department view in dashboard`}
                                 >
                                   <Building2 size={13} className="text-slate-400 group-hover:text-[#5455EE]" />
@@ -816,18 +855,18 @@ export default function PriorityConcerns({
                     {/* 3. Pattern / Evidence Summary: Grouped in ONE single section with direct executive data reporting tiles */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#5455EE] uppercase tracking-wider">
-                          <Layers size={13} />
+                        <div className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-[#5455EE]">
+                          <Layers size={15} />
                           <span>Pattern / Evidence Summary</span>
                         </div>
-                        <span className="text-[11px] font-semibold text-slate-400">
+                        <span className="text-xs font-normal leading-[18px] text-slate-500">
                           5 Synthesized Channels
                         </span>
                       </div>
 
                       <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EBECEF] space-y-3 text-sm">
-                        {/* Executive Data Reporting Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        {/* Executive Data Reporting Grid: wide 3-column layout when card is expanded */}
+                        <div className={`grid grid-cols-1 ${hasExpandedCard ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'} gap-2.5`}>
                           {getStructuredEvidenceTiles(item, isDepartmentView, departmentName).map((tile, idx) => {
                             const isFifth = idx === 4;
                             const IconComponent = tile.icon;
@@ -835,7 +874,7 @@ export default function PriorityConcerns({
                               <div
                                 key={tile.key || idx}
                                 className={`p-3 rounded-xl bg-[#FBFBFE] hover:bg-[#F6F7FD] border border-slate-200/80 transition-all flex flex-col justify-between gap-1.5 ${
-                                  isFifth ? 'md:col-span-2' : ''
+                                  isFifth ? (hasExpandedCard ? 'lg:col-span-2' : 'md:col-span-2') : ''
                                 }`}
                               >
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -845,7 +884,7 @@ export default function PriorityConcerns({
                                     >
                                       <IconComponent size={13} strokeWidth={2.2} />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-800">
+                                    <span className="text-sm font-medium leading-5 text-slate-800">
                                       {tile.channel}
                                     </span>
                                   </div>
@@ -854,7 +893,7 @@ export default function PriorityConcerns({
                                     {tile.pills.map((pill, pIdx) => (
                                       <span
                                         key={pIdx}
-                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold ${
+                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium leading-[18px] ${
                                           pill.alert
                                             ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                             : pill.delta
@@ -863,13 +902,13 @@ export default function PriorityConcerns({
                                         }`}
                                       >
                                         {pill.label && (
-                                          <span className="text-slate-400 font-semibold">
+                                          <span className="text-slate-400 font-normal">
                                             {pill.label}:
                                           </span>
                                         )}
-                                        <span className="font-extrabold">{pill.val}</span>
+                                        <span className="font-semibold tabular-nums">{pill.val}</span>
                                         {pill.delta && (
-                                          <span className="text-rose-600 font-black">
+                                          <span className="text-rose-600 font-semibold tabular-nums">
                                             ({pill.delta})
                                           </span>
                                         )}
@@ -878,8 +917,8 @@ export default function PriorityConcerns({
                                   </div>
                                 </div>
 
-                                <div className="text-xs text-slate-600 leading-relaxed mt-0.5">
-                                  <strong className="font-bold text-slate-900">
+                                <div className="text-sm font-normal leading-[22px] text-slate-700 mt-1">
+                                  <strong className="font-medium text-slate-900">
                                     {tile.headline}:{' '}
                                   </strong>
                                   <span>{tile.text}</span>
@@ -891,7 +930,7 @@ export default function PriorityConcerns({
 
                         {/* “View all Evidence” dark button inside the unified section */}
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-xs font-normal leading-[18px] text-slate-500">
                             Drill down into verbatim excerpts, audit logs, and granular channel records
                           </span>
                           <button
@@ -900,13 +939,13 @@ export default function PriorityConcerns({
                               e.stopPropagation();
                               setSelectedEvidenceConcern(item);
                             }}
-                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer group"
+                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium leading-5 transition-all shadow-xs hover:shadow-md cursor-pointer group"
                             title="View all Evidence"
                           >
-                            <Layers size={13} className="text-white" />
+                            <Layers size={14} className="text-white" />
                             <span>View all Evidence</span>
                             <ArrowRight
-                              size={13}
+                              size={14}
                               className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-white transition-all"
                             />
                           </button>
@@ -916,12 +955,12 @@ export default function PriorityConcerns({
 
                     {/* 4. AI interpretation: Spacious container with comfortable padding so text never sticks to borders */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#5455EE] uppercase tracking-wider">
-                        <Sparkles size={13} />
+                      <div className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-[#5455EE]">
+                        <Sparkles size={15} />
                         <span>AI Interpretation</span>
                       </div>
                       <div className="p-4 sm:p-5 rounded-2xl bg-[#EEF0FF]/60 border border-[#5455EE]/25 shadow-2xs">
-                        <p className="text-sm text-slate-800 leading-relaxed font-medium">
+                        <p className="text-sm font-normal leading-[22px] text-slate-800">
                           {item.aiInterpretation ||
                             (item.id === 'CON-01'
                               ? 'Multiple anonymized signals indicate recurring task allocation ambiguity and workload friction among new hires in Engineering. HR should validate with manager context before assigning corrective action.'
@@ -934,11 +973,11 @@ export default function PriorityConcerns({
 
                     {/* 5. Recommend next step: Consistent section title design & point form / 123 */}
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#5455EE] uppercase tracking-wider">
-                        <ClipboardCheck size={13} />
+                      <div className="flex items-center gap-1.5 text-sm font-semibold leading-5 text-[#5455EE]">
+                        <ClipboardCheck size={15} />
                         <span>Recommend Next Step</span>
                       </div>
-                      <ol className="list-decimal pl-5 space-y-1.5 text-sm text-slate-800 leading-relaxed font-medium">
+                      <ol className="list-decimal pl-5 space-y-1.5 text-sm font-normal leading-[22px] text-slate-800">
                         {getRecommendedSteps(item.recommendedNextStep).map((step, idx) => (
                           <li key={idx} className="pl-1">
                             {step}
@@ -960,13 +999,13 @@ export default function PriorityConcerns({
                             onActionPlanClick(item);
                           }
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer group"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium leading-5 transition-all shadow-xs hover:shadow-md cursor-pointer group"
                         title="Create Action Plan for this concern"
                       >
                         <Sparkles size={14} className="text-[#A5B4FC]" />
                         <span>Create Action Plan</span>
                         <ArrowRight
-                          size={13}
+                          size={14}
                           className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-white transition-all"
                         />
                       </button>

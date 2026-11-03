@@ -244,11 +244,11 @@ export default function FeedbackReportsView({
         {activeTab === 'reports' ? (
           <>
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Total Confidential Reports
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">{reports.length}</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">{reports.length}</span>
                 <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
                   2 High Priority
                 </span>
@@ -256,31 +256,31 @@ export default function FeedbackReportsView({
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Under Active Triage
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-[#5455EE]">3</span>
-                <span className="text-[11px] text-slate-500">In Progress</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-[#5455EE]">3</span>
+                <span className="text-xs font-normal leading-[18px] text-slate-500">In Progress</span>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Avg Response Time
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-emerald-600">1.4 Days</span>
-                <span className="text-[11px] text-slate-500">Target &lt; 2 Days</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">1.4 Days</span>
+                <span className="text-xs font-normal leading-[18px] text-slate-500">Target &lt; 2 Days</span>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Linked Action Plans
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">1 Active</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">1 Active</span>
                 <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
                   AP-01
                 </span>
@@ -290,44 +290,44 @@ export default function FeedbackReportsView({
         ) : (
           <>
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Total Feedback Submitted
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">{feedbackList.length}</span>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-slate-900">{feedbackList.length}</span>
+                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                   100% Constructive
                 </span>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Process & Tooling Ideas
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-[#5455EE]">2</span>
-                <span className="text-[11px] text-slate-500">Highest Engagement</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-[#5455EE]">2</span>
+                <span className="text-xs font-normal leading-[18px] text-slate-500">Highest Engagement</span>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Onboarding & Culture
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-purple-600">2</span>
-                <span className="text-[11px] text-slate-500">Peer Suggested</span>
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-purple-600">2</span>
+                <span className="text-xs font-normal leading-[18px] text-slate-500">Peer Suggested</span>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#EBECEF] shadow-xs flex flex-col gap-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                 Implemented / Planned
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-emerald-600">2 Actions</span>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                <span className="text-2xl sm:text-[30px] font-semibold leading-9 tabular-nums text-emerald-600">2 Actions</span>
+                <span className="text-xs font-medium leading-[18px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                   In Progress
                 </span>
               </div>
@@ -349,7 +349,7 @@ export default function FeedbackReportsView({
                 ? 'Search reports by ID, concern, department, or keyword...'
                 : 'Search feedback by ID, suggestion, squad, or keyword...'
             }
-            className="w-full pl-9 pr-4 py-2 text-xs bg-[#F8F9FD] border border-slate-200 rounded-xl outline-none focus:border-[#5455EE] transition-all"
+            className="w-full pl-9 pr-4 py-2 text-sm font-normal leading-5 bg-[#F8F9FD] border border-slate-200 rounded-xl outline-none focus:border-[#5455EE] transition-all"
           />
         </div>
 
@@ -358,7 +358,7 @@ export default function FeedbackReportsView({
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="p-2 text-xs font-semibold bg-[#F8F9FD] border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-[#5455EE] cursor-pointer"
+            className="p-2 text-sm font-medium leading-5 bg-[#F8F9FD] border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-[#5455EE] cursor-pointer"
           >
             <option value="all">All Concern Categories</option>
             <option value="con_01">Burnout & Workload Imbalance</option>
@@ -374,7 +374,7 @@ export default function FeedbackReportsView({
         <div className="bg-white border border-[#EBECEF] rounded-3xl shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-medium uppercase tracking-wider text-xs leading-[18px]">
                 <tr>
                   <th className="p-4">Report ID</th>
                   <th className="p-4">Tenure & Dept</th>
@@ -402,7 +402,7 @@ export default function FeedbackReportsView({
                         className="hover:bg-[#F8F9FD] transition-colors"
                       >
                         <td className="p-4">
-                          <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+                          <span className="text-xs font-mono font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                             {r.id}
                           </span>
                         </td>
@@ -432,19 +432,19 @@ export default function FeedbackReportsView({
                           )}
                         </td>
                         <td className="p-4">
-                          <span className="font-bold text-slate-800 text-xs">{cat.name}</span>
+                          <span className="font-medium text-slate-800 text-sm leading-5">{cat.name}</span>
                         </td>
                         <td className="p-4 max-w-sm">
-                          <div className="text-xs font-bold text-slate-900 truncate">
+                          <div className="text-sm font-semibold leading-5 text-slate-900 truncate">
                             {r.concernTitle}
                           </div>
-                          <div className="text-slate-500 text-xs truncate mt-0.5">
+                          <div className="text-slate-500 text-xs font-normal leading-[18px] truncate mt-0.5">
                             {r.snippet}
                           </div>
                         </td>
                         <td className="p-4">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
+                            className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${
                               r.priority === 'High'
                                 ? 'bg-rose-50 text-rose-600 border border-rose-200'
                                 : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -455,7 +455,7 @@ export default function FeedbackReportsView({
                         </td>
                         <td className="p-4">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${getStatusBadge(
+                            className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
                               r.statusType,
                               r.status
                             )}`}
@@ -466,7 +466,7 @@ export default function FeedbackReportsView({
                         <td className="p-4 text-right">
                           <button
                             onClick={() => onReviewReport(r, cat)}
-                            className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                            className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-medium rounded-xl text-sm leading-5 transition-colors cursor-pointer"
                           >
                             Take Action
                           </button>
@@ -486,7 +486,7 @@ export default function FeedbackReportsView({
         <div className="bg-white border border-[#EBECEF] rounded-3xl shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+              <thead className="bg-[#F8F9FD] border-b border-[#EBECEF] text-slate-500 font-medium uppercase tracking-wider text-xs leading-[18px]">
                 <tr>
                   <th className="p-4">Feedback ID</th>
                   <th className="p-4">Department / Squad</th>
@@ -511,7 +511,7 @@ export default function FeedbackReportsView({
                       className="hover:bg-[#F8F9FD] transition-colors"
                     >
                       <td className="p-4">
-                        <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-mono font-medium text-slate-500 uppercase tracking-wider leading-[18px]">
                           {f.id}
                         </span>
                         <div className="text-[10px] text-slate-400 mt-0.5">{f.date}</div>
@@ -547,7 +547,7 @@ export default function FeedbackReportsView({
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${getStatusBadge(
+                          className={`px-2.5 py-0.5 rounded-full font-medium text-xs leading-[18px] ${getStatusBadge(
                             f.statusType,
                             f.status
                           )}`}
@@ -562,7 +562,7 @@ export default function FeedbackReportsView({
                             setSelectedFeedbackModal(f);
                             setFeedbackEditStatus(f.status || 'Need Review');
                           }}
-                          className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                          className="px-3.5 py-1.5 bg-[#EEF0FF] hover:bg-[#E0E3FF] text-[#5455EE] font-medium rounded-xl text-sm leading-5 transition-colors cursor-pointer"
                         >
                           Review Feedback
                         </button>
@@ -583,7 +583,7 @@ export default function FeedbackReportsView({
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <MessageSquareHeart size={18} className="text-[#5455EE]" />
-                <h4 className="text-base font-extrabold text-slate-900">
+                <h4 className="text-xl font-semibold leading-7 text-slate-900">
                   Feedback Review: {selectedFeedbackModal.id}
                 </h4>
               </div>
@@ -598,19 +598,19 @@ export default function FeedbackReportsView({
 
             <div className="flex flex-col gap-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-medium uppercase tracking-wider text-slate-500 leading-[18px]">
                   Subject / Suggestion Title
                 </span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">
+                <p className="text-base font-semibold leading-6 text-slate-900 mt-0.5">
                   {selectedFeedbackModal.title}
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200 text-slate-700 leading-relaxed text-xs">
+              <div className="p-3.5 rounded-2xl bg-[#F8F9FD] border border-slate-200 text-slate-700 leading-[22px] text-sm font-normal">
                 {selectedFeedbackModal.snippet}
               </div>
 
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-normal leading-[22px]">
                 <span className="font-bold block mb-0.5">Target Positive Outcome:</span>
                 <p>{selectedFeedbackModal.outcome}</p>
               </div>
@@ -650,7 +650,7 @@ export default function FeedbackReportsView({
                 <button
                   type="button"
                   onClick={() => setSelectedFeedbackModal(null)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-slate-600 font-medium text-sm leading-5 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -666,7 +666,7 @@ export default function FeedbackReportsView({
                     );
                     setSelectedFeedbackModal(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#5455EE] text-white font-bold hover:bg-[#4344dd] transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-[#5455EE] text-white font-medium text-sm leading-5 hover:bg-[#4344dd] transition-colors cursor-pointer shadow-xs"
                 >
                   Save Status & Changes
                 </button>

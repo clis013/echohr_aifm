@@ -1236,3 +1236,285 @@ export const MAYA_PROFILE = {
   pulseComment: "Quite a busy week, but I'm managing. There were a few things I wasn't sure about.",
   followUpComment: "It's easier to understand what needs to be done first now. When new tasks come in, we discuss what should move instead of trying to finish everything at once. I feel more comfortable asking for clarification."
 };
+
+// Company Policies & Knowledge Base (Referenced by Eko AI to answer workplace issues)
+export const COMPANY_POLICIES = [
+  {
+    id: "HR-POL-014",
+    title: "Workload Allocation, Overtime & Task Delegation Policy",
+    category: "workload",
+    categoryLabel: "Workload & Hours",
+    lastUpdated: "15 Oct 2026",
+    version: "v3.2",
+    effectiveDate: "01 Jan 2026",
+    summary: "Governs sprint capacity limits, protects junior team members from ad-hoc task offloading, and establishes explicit overtime approval and compensatory rest guidelines.",
+    ekoUsage: "Eko references this policy when diagnosing sprint overload, evaluating whether peer-delegated tasks require manager approval, and helping employees negotiate priorities.",
+    keyGuidelines: [
+      {
+        clause: "Clause 4.1 - Junior Tenure Protection",
+        text: "Employees in their first 6 months shall not be assigned unestimated peer tasks without prior approval from their designated people manager."
+      },
+      {
+        clause: "Clause 4.2 - Sprint WIP Limits",
+        text: "Sprint task commitments exceeding 85% of total capacity must trigger a backlog review to defer lower-priority items."
+      },
+      {
+        clause: "Clause 5.3 - Overtime & TOIL",
+        text: "Overtime exceeding 5 hours in any working week requires manager pre-approval and is eligible for Time-Off-In-Lieu (TOIL)."
+      }
+    ],
+    faqs: [
+      {
+        q: "Can a senior colleague assign me extra work directly?",
+        a: "Under Clause 4.1, extra tasks passed from peers must be reviewed with your manager if they impact your core sprint commitments."
+      },
+      {
+        q: "What should I do if my sprint is over capacity?",
+        a: "Notify your manager early. Under Clause 4.2, work must be reprioritized rather than expecting sustained overtime."
+      }
+    ]
+  },
+  {
+    id: "ENG-SOP-008",
+    title: "Sprint Task Handoff, Definition of Done & Client Launch Standards",
+    category: "task_ownership",
+    categoryLabel: "Task Ownership & Onboarding",
+    lastUpdated: "02 Oct 2026",
+    version: "v2.4",
+    effectiveDate: "15 Mar 2026",
+    summary: "Standard operating procedures for cross-functional task handovers, documentation requirements, and client launch release deliverables.",
+    ekoUsage: "Eko uses this standard to retrieve checklists (such as the Client Launch Checklist) and define what materials an engineer is expected to prepare.",
+    keyGuidelines: [
+      {
+        clause: "Clause 2.1 - Task Handoff Brief",
+        text: "Any task delegated to another engineer must include acceptance criteria, target environment, and estimated completion effort."
+      },
+      {
+        clause: "Clause 2.3 - Client Launch Checklist",
+        text: "Client launch readiness requires: (1) Approved corporate presentation deck, (2) Product feature brief, (3) QA demo checklist, and (4) Project lead sign-off."
+      },
+      {
+        clause: "Clause 3.2 - Definition of Done",
+        text: "Testing documentation must accompany feature releases, but ownership remains with the authoring engineer unless explicitly reassigned in sprint planning."
+      }
+    ],
+    faqs: [
+      {
+        q: "Where do I find the approved slide deck template for launch meetings?",
+        a: "Corporate Marketing & Product templates are linked in the internal design system repository under /templates/client-launch."
+      },
+      {
+        q: "Am I required to finish someone else's testing documentation?",
+        a: "Only if formally reassigned in sprint planning. Ad-hoc requests should be verified with your engineering manager."
+      }
+    ]
+  },
+  {
+    id: "HR-POL-021",
+    title: "Psychological Safety, Confidential Reporting & Non-Retaliation Policy",
+    category: "grievance",
+    categoryLabel: "Grievance & Safety",
+    lastUpdated: "28 Sep 2026",
+    version: "v4.0",
+    effectiveDate: "01 Feb 2026",
+    summary: "Guarantees reporter privacy, anonymous reference code tracking, and strict immunity against any direct or indirect retaliation for raising concerns.",
+    ekoUsage: "Eko consults this policy to explain reporting privacy levels (full anonymous vs confidential) and advise employees on their protections.",
+    keyGuidelines: [
+      {
+        clause: "Clause 1.2 - Absolute Non-Retaliation",
+        text: "Zero tolerance for retaliation. Any adverse career impact, negative review influence, or social exclusion will result in disciplinary action up to dismissal."
+      },
+      {
+        clause: "Clause 3.1 - Anonymous Reference Tracking",
+        text: "Submissions generate isolated codes (e.g., ANON-4827) allowing two-way communication without exposing employee identity to reviewers."
+      },
+      {
+        clause: "Clause 5.2 - Investigation SLAs",
+        text: "HR business partners must acknowledge and begin initial triage on high-severity workplace friction reports within 48 business hours."
+      }
+    ],
+    faqs: [
+      {
+        q: "Will my manager know if I submit a confidential report?",
+        a: "No. If you choose Anonymous or Department-level aggregation, your identity is cryptographically separated from the report content."
+      },
+      {
+        q: "Can I take back a report after submitting it?",
+        a: "Yes, you can retract any submission from your Voice & Feedback hub within 30 days of submission."
+      }
+    ]
+  },
+  {
+    id: "HR-POL-032",
+    title: "Manager 1-on-1 Check-in & Early Tenure Support Framework",
+    category: "mentorship",
+    categoryLabel: "Growth & Mentorship",
+    lastUpdated: "10 Oct 2026",
+    version: "v2.1",
+    effectiveDate: "01 May 2026",
+    summary: "Sets mandatory cadences for manager-employee check-ins, onboarding milestone reviews, and psychologically safe communication standards.",
+    ekoUsage: "Eko uses this framework to craft recommended 1-on-1 talking points and draft neutral emails for employees asking managers for support.",
+    keyGuidelines: [
+      {
+        clause: "Clause 2.2 - Onboarding Cadence",
+        text: "Engineering managers must conduct weekly 30-minute 1-on-1 touchpoints with team members in their first 90 days."
+      },
+      {
+        clause: "Clause 3.1 - Agenda Requirements",
+        text: "Check-ins must dedicate at least 10 minutes to workload balance, psychological safety, and clarifying conflicting requirements."
+      },
+      {
+        clause: "Clause 4.3 - Safe Communication Protocols",
+        text: "Employees have the explicit right to decline tasks outside their primary scope when sprint capacity has been reached."
+      }
+    ],
+    faqs: [
+      {
+        q: "How can I ask my manager for a 1-on-1 without seeming needy?",
+        a: "Requesting alignment on sprint priorities is normal professional practice. Use Eko's draft generator for an appropriate message template."
+      }
+    ]
+  },
+  {
+    id: "BEN-POL-005",
+    title: "Employee Assistance Program (EAP) & Mental Wellbeing Support",
+    category: "wellbeing",
+    categoryLabel: "Wellbeing & Health",
+    lastUpdated: "18 Sep 2026",
+    version: "v3.0",
+    effectiveDate: "01 Jan 2026",
+    summary: "Provides access to confidential professional counselling, mental health days, and protected focus time blocks for all full-time employees.",
+    ekoUsage: "Eko suggests EAP contact information and mental wellbeing resources when employees express distress, burnout, or anxiety.",
+    keyGuidelines: [
+      {
+        clause: "Clause 1.1 - 24/7 Counselling Access",
+        text: "6 free, confidential counselling sessions per year via an independent third-party provider (EchoCare Health). No information is shared with HR."
+      },
+      {
+        clause: "Clause 2.4 - Protected Focus Time",
+        text: "Wednesday afternoons are company-wide 'No-Meeting Focus Blocks' to prevent context switching and burnout."
+      },
+      {
+        clause: "Clause 3.2 - Mental Health Leave",
+        text: "Employees may utilize designated mental health wellness days without requiring a medical certificate for single-day absences."
+      }
+    ],
+    faqs: [
+      {
+        q: "Is EAP truly confidential?",
+        a: "Yes. The service is provided by an external third party. The company only receives aggregate statistics with zero identifying details."
+      }
+    ]
+  },
+  {
+    id: "HR-POL-009",
+    title: "Hybrid Working Norms, Core Hours & Disconnection Rights",
+    category: "workload",
+    categoryLabel: "Workload & Hours",
+    lastUpdated: "05 Oct 2026",
+    version: "v2.0",
+    effectiveDate: "01 Apr 2026",
+    summary: "Defines core synchronization hours, asynchronous collaboration expectations, and protects employee right to disconnect after business hours.",
+    ekoUsage: "Eko references this policy when assessing late-night communication pressures, weekend slack messages, or remote coordination friction.",
+    keyGuidelines: [
+      {
+        clause: "Clause 2.1 - Core Collaboration Hours",
+        text: "Team synchronization hours are set between 10:00 AM and 4:00 PM local time. Meetings should not be scheduled outside this window."
+      },
+      {
+        clause: "Clause 3.3 - Right to Disconnect",
+        text: "Employees are not obligated to monitor or reply to work communications outside their designated work hours unless officially on on-call rotation."
+      }
+    ],
+    faqs: [
+      {
+        q: "Do I have to reply to messages sent at 9 PM?",
+        a: "No. Under the Right to Disconnect, you are encouraged to silence notifications outside your agreed schedule."
+      }
+    ]
+  }
+];
+
+export const INITIAL_UNANSWERED_QUESTIONS = [
+  {
+    id: "UNQ-01",
+    question: "Can an engineer claim Time-Off-In-Lieu (TOIL) if overtime was incurred resolving an unapproved weekend production incident?",
+    askedBy: "Anonymous Peer (Engineering • Platform Squad)",
+    askedDate: "Yesterday, 16:40",
+    category: "workload",
+    categoryLabel: "Workload & Hours",
+    aiDiagnosis: "Eko AI flagged missing company policy coverage for emergency weekend incident compensation.",
+    status: "pending", // 'pending' | 'answered'
+    hrAnswer: "",
+    answeredBy: "",
+    answeredDate: "",
+    linkedPolicyId: "HR-POL-014",
+  },
+  {
+    id: "UNQ-02",
+    question: "Is there an approved company stipend or budget for ergonomic desk chairs and noise-cancelling headphones for 100% hybrid staff?",
+    askedBy: "Anonymous Peer (Product & Design)",
+    askedDate: "22 Oct 2026, 11:15",
+    category: "wellbeing",
+    categoryLabel: "Wellbeing & Equipment",
+    aiDiagnosis: "AI knowledge base only covers standard office desks and MacBook Pro allocations. No hybrid ergonomics policy found.",
+    status: "pending",
+    hrAnswer: "",
+    answeredBy: "",
+    answeredDate: "",
+    linkedPolicyId: "HR-POL-009",
+  },
+  {
+    id: "UNQ-03",
+    question: "If my assigned people manager is on extended leave (>3 weeks), who has formal sign-off for sprint backlog adjustments and mid-cycle level progression?",
+    askedBy: "Anonymous Peer (Customer Operations)",
+    askedDate: "20 Oct 2026, 14:00",
+    category: "task_ownership",
+    categoryLabel: "Task Ownership & Escalation",
+    aiDiagnosis: "AI knowledge gap resolved by HR. Policy published to Eko knowledge base.",
+    status: "answered",
+    hrAnswer: "In the event of a designated people manager leave exceeding 14 calendar days, delegation of authority automatically passes to the Group Director and designated People Partner (HR-SOP-08 Clause 2.1). Backlog trade-offs can be authorized during weekly triage.",
+    answeredBy: "Sarah Jenkins (Senior HR Partner)",
+    answeredDate: "21 Oct 2026, 09:30",
+    linkedPolicyId: "HR-POL-021",
+  },
+];
+
+export const INITIAL_KNOWLEDGE_FAQS = [
+  {
+    id: "KB-01",
+    question: "Can senior colleagues offload documentation work to new hires without sprint estimation?",
+    answer: "No. Clause 4.1 of HR-POL-014 strictly prohibits delegating unestimated peer tasks to team members in their first 6 months without designated people manager pre-approval.",
+    category: "workload",
+    policyId: "HR-POL-014",
+    lastUpdated: "18 Oct 2026",
+    verifiedBy: "HR People Team",
+  },
+  {
+    id: "KB-02",
+    question: "What is the maximum overtime an employee can work in a week without written manager consent?",
+    answer: "Overtime exceeding 5 hours in any single working week requires written manager pre-approval and qualifies for Time-Off-In-Lieu (TOIL) at 1.5x hourly equivalent.",
+    category: "workload",
+    policyId: "HR-POL-014",
+    lastUpdated: "15 Oct 2026",
+    verifiedBy: "HR People Team",
+  },
+  {
+    id: "KB-03",
+    question: "How does confidential reporting protect my identity from my direct manager?",
+    answer: "Reports flagged with Department-Level or Full Anonymity strip all names, employee IDs, and private Eko AI chats before reaching HR. Managers only see anonymized trend themes and approved action plans.",
+    category: "grievance",
+    policyId: "HR-POL-021",
+    lastUpdated: "20 Oct 2026",
+    verifiedBy: "Compliance & Safety",
+  },
+  {
+    id: "KB-04",
+    question: "What should I do if a pull request (PR) has been waiting for review for more than 24 hours?",
+    answer: "Under the Engineering PR Review SLA, PRs inactive for 24 hours can be escalated directly to the Squad Tech Lead during morning standup without requiring individual peer nudges.",
+    category: "task_ownership",
+    policyId: "HR-POL-018",
+    lastUpdated: "22 Oct 2026",
+    verifiedBy: "Engineering & HR",
+  },
+];
